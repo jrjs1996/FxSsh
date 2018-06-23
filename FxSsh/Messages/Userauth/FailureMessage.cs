@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace FxSsh.Messages.Userauth
@@ -10,28 +11,52 @@ namespace FxSsh.Messages.Userauth
 
         public override byte MessageType { get { return MessageNumber; } }
 
-        public string[] NameList { get; set; }
+        public AuthenticationMethod[] AuthenticationMethods { get; set; }
 
         public bool PartialSuccess { get; set; }
 
         public FailureMessage() { }
 
-        public FailureMessage(string[] nameList, bool partialSuccess)
+        public FailureMessage(List<AuthenticationMethod> authenticationMethods, bool partialSuccess)
         {
-            NameList = nameList;
+            AuthenticationMethods = authenticationMethods.ToArray();
             PartialSuccess = partialSuccess;
         }
 
         protected override void OnGetPacket(SshDataWorker writer)
         {
-            for (var i = 0; i < NameList.Length; i++)
+            if (AuthenticationMethods == null)
             {
-                writer.Write(NameList[i] + ",", Encoding.ASCII);
-                if (i < NameList.Length -1)
-                    writer.Write(NameList[i], Encoding.ASCII);
+                writer.Write("", Encoding.ASCII);
+                writer.Write(false);
+                return;
             }
 
+            string nameList = "";
+            for (var i = 0; i < AuthenticationMethods.Length; i++)
+            {
+                var authenticationMethodName = GetAuthenticationMethodName(AuthenticationMethods[i]);
+                nameList += authenticationMethodName;
+                if (i < AuthenticationMethods.Length - 1)
+                    nameList += ",";
+            }
+            writer.Write(nameList, Encoding.ASCII);
             writer.Write(PartialSuccess);
+        }
+
+        private string GetAuthenticationMethodName(AuthenticationMethod authenticationMethod)
+        {
+            switch (authenticationMethod)
+            {
+                case AuthenticationMethod.PublicKey:
+                    return "publickey";
+                case AuthenticationMethod.Password:
+                    return "password";
+                case AuthenticationMethod.HostBased:
+                    return "hostbased";
+                default:
+                    return "none";
+            }
         }
     }
 }

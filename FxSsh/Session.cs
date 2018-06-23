@@ -17,6 +17,9 @@ namespace FxSsh
 {
     public class Session
     {
+
+        internal Dictionary<AuthenticationMethod, bool> AuthenticationMethods;
+
         private const byte CarriageReturn = 0x0d;
         private const byte LineFeed = 0x0a;
         internal const int MaximumSshPacketSize = LocalChannelDataPacketSize;
@@ -99,6 +102,24 @@ namespace FxSsh
             _socket = socket;
             _hostKey = hostKey.ToDictionary(s => s.Key, s => s.Value);
             ServerVersion = "SSH-2.0-FxSsh";
+        }
+
+        public Session(Socket socket, Dictionary<string, string> hostKey,
+            List<AuthenticationMethod> authenticationMethods)
+        {
+            Contract.Requires(socket != null);
+            Contract.Requires(hostKey != null);
+            Contract.Requires(authenticationMethods != null);
+
+            _socket = socket;
+            _hostKey = hostKey.ToDictionary(s => s.Key, s => s.Value);
+            ServerVersion = "SSH-2.0-FxSsh";
+
+            AuthenticationMethods = new Dictionary<AuthenticationMethod, bool>();
+            foreach (var authenticationMethod in authenticationMethods)
+            {
+                AuthenticationMethods.Add(authenticationMethod, false);
+            }
         }
 
         public event EventHandler<EventArgs> Disconnected;
@@ -464,7 +485,7 @@ namespace FxSsh
                 .Invoke(this, new[] { message });
         }
 
-        private void HandleMessage(FxSsh.Messages.Userauth.RequestMessage message)
+        private void HandleMessage(Messages.Userauth.RequestMessage message)
         {
             var service = GetService<UserauthService>();
             if (service != null)

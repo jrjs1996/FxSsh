@@ -1,7 +1,9 @@
 ﻿using FxSsh.Messages;
 using FxSsh.Messages.Userauth;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Reflection;
 
 namespace FxSsh.Services
@@ -26,8 +28,9 @@ namespace FxSsh.Services
             Contract.Requires(message != null);
 
             typeof(UserauthService)
-                .GetMethod("HandleMessage", BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { message.GetType() }, null)
-                .Invoke(this, new[] { message });
+                .GetMethod("HandleMessage", BindingFlags.NonPublic | BindingFlags.Instance, null,
+                    new[] {message.GetType()}, null)
+                .Invoke(this, new[] {message});
         }
 
         private void HandleMessage(RequestMessage message)
@@ -39,6 +42,9 @@ namespace FxSsh.Services
                     HandleMessage(publicKeyMsg);
                     break;
                 case "password":
+                    var passwordMsg = Message.LoadFrom<PasswordRequestMessage>(message);
+                    HandleMessage(passwordMsg);
+                    break;
                 case "hostbased":
                 case "none":
                     var noneMsg = Message.LoadFrom<NoneRequestMessage>(message);
@@ -56,7 +62,11 @@ namespace FxSsh.Services
             {
                 if (!message.HasSignature)
                 {
-                    _session.SendMessage(new PublicKeyOkMessage { KeyAlgorithmName = message.KeyAlgorithmName, PublicKey = message.PublicKey });
+                    _session.SendMessage(new PublicKeyOkMessage
+                    {
+                        KeyAlgorithmName = message.KeyAlgorithmName,
+                        PublicKey = message.PublicKey
+                    });
                     return;
                 }
 
@@ -92,17 +102,75 @@ namespace FxSsh.Services
                 else
                 {
                     _session.SendMessage(new FailureMessage());
-                    throw new SshConnectionException("Authentication fail.", DisconnectReason.NoMoreAuthMethodsAvailable);
+                    throw new SshConnectionException("Authentication fail.",
+                        DisconnectReason.NoMoreAuthMethodsAvailable);
                 }
             }
+
             _session.SendMessage(new FailureMessage());
         }
 
         private void HandleMessage(NoneRequestMessage message)
         {
-            // Implement Authentication Here Should send SSH_MSG_USERAUTH_FAILURE
-            _session.SendMessage(new SuccessMessage()); ;
-            _session.SendMessage(new FailureMessage(new []{"password"}, false));;
+            if (_session.AuthenticationMethods == null)
+            {
+                _session.SendMessage(new SuccessMessage());
+                return;
+            }
+                   
+            var remainingAuthenticationMethods = GetRemainingAuthenticationMethods();
+            if (remainingAuthenticationMethods.Count == 0)
+            {
+                _session.SendMessage(new SuccessMessage());
+                return;
+            }
+               
+            _session.SendMessage(new FailureMessage(remainingAuthenticationMethods, false));
+        }
+
+        private void HandleMessage(PasswordRequestMessage message)
+        {
+            if (_session.AuthenticationMethods == null)
+            {
+                _session.SendMessage(new FailureMessage());
+                return;
+            }
+
+            if (!_session.AuthenticationMethods.ContainsKey(AuthenticationMethod.Password))
+            {
+                _session.SendMessage(new FailureMessage());
+                return;
+            }
+            
+            // Handle authentication here
+            if (message.Password != "password")
+            {
+                _session.SendMessage(new FailureMessage());
+                return;
+            }
+
+            _session.AuthenticationMethods[AuthenticationMethod.Password] = true;
+
+            var remainingAuthenticationMethods = GetRemainingAuthenticationMethods();
+            if (remainingAuthenticationMethods.Count > 0)
+            {
+                _session.SendMessage(new FailureMessage(remainingAuthenticationMethods, true));
+                return;
+            }
+
+            _session.SendMessage(new SuccessMessage());
+        }
+
+        private List<AuthenticationMethod> GetRemainingAuthenticationMethods()
+        {
+            if (_session.AuthenticationMethods == null)
+            {
+                return new List<AuthenticationMethod>();
+            }
+            else
+            {
+                return _session.AuthenticationMethods.Where(m => m.Value == false).Select(m => m.Key).ToList();
+            }
         }
     }
 }
