@@ -35,12 +35,15 @@ namespace FxSsh.Services
             switch (message.MethodName)
             {
                 case "publickey":
-                    var msg = Message.LoadFrom<PublicKeyRequestMessage>(message);
-                    HandleMessage(msg);
+                    var publicKeyMsg = Message.LoadFrom<PublicKeyRequestMessage>(message);
+                    HandleMessage(publicKeyMsg);
                     break;
                 case "password":
                 case "hostbased":
                 case "none":
+                    var noneMsg = Message.LoadFrom<NoneRequestMessage>(message);
+                    HandleMessage(noneMsg);
+                    break;
                 default:
                     _session.SendMessage(new FailureMessage());
                     break;
@@ -93,6 +96,13 @@ namespace FxSsh.Services
                 }
             }
             _session.SendMessage(new FailureMessage());
+        }
+
+        private void HandleMessage(NoneRequestMessage message)
+        {
+            // Implement Authentication Here Should send SSH_MSG_USERAUTH_FAILURE
+            _session.SendMessage(new SuccessMessage()); ;
+            _session.SendMessage(new FailureMessage(new []{"password"}, false));;
         }
     }
 }

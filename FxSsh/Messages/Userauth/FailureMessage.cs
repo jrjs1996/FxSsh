@@ -10,10 +10,28 @@ namespace FxSsh.Messages.Userauth
 
         public override byte MessageType { get { return MessageNumber; } }
 
+        public string[] NameList { get; set; }
+
+        public bool PartialSuccess { get; set; }
+
+        public FailureMessage() { }
+
+        public FailureMessage(string[] nameList, bool partialSuccess)
+        {
+            NameList = nameList;
+            PartialSuccess = partialSuccess;
+        }
+
         protected override void OnGetPacket(SshDataWorker writer)
         {
-            writer.Write("publickey", Encoding.ASCII); // only accept public key
-            writer.Write(false);
+            for (var i = 0; i < NameList.Length; i++)
+            {
+                writer.Write(NameList[i] + ",", Encoding.ASCII);
+                if (i < NameList.Length -1)
+                    writer.Write(NameList[i], Encoding.ASCII);
+            }
+
+            writer.Write(PartialSuccess);
         }
     }
 }

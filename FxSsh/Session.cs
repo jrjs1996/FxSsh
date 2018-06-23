@@ -464,6 +464,13 @@ namespace FxSsh
                 .Invoke(this, new[] { message });
         }
 
+        private void HandleMessage(FxSsh.Messages.Userauth.RequestMessage message)
+        {
+            var service = GetService<UserauthService>();
+            if (service != null)
+                service.HandleMessageCore(message);
+        }
+
         private void HandleMessage(DisconnectMessage message)
         {
             Disconnect(message.ReasonCode, message.Description);
