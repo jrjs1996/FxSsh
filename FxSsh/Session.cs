@@ -19,8 +19,6 @@ namespace FxSsh {
     public class Session {
         internal Dictionary<AuthenticationMethod, bool> AuthenticationMethods;
 
-        internal Terminal Terminal;
-
         private const byte carriageReturn = 0x0d;
 
         private const byte lineFeed = 0x0a;

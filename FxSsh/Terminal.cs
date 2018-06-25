@@ -1,7 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Text;
+using FxSsh.Services;
 
 namespace FxSsh {
-    class Terminal {
+    public class Terminal {
         public string Term;
 
         private uint terminalWidthCharacters;
@@ -14,10 +18,15 @@ namespace FxSsh {
 
         private string encodedTerminalModes;
 
-        private Dictionary<string, string> environmentVariables;
+        private readonly Channel channel;
+
+        private readonly Dictionary<string, string> environmentVariables;
+
+        private readonly byte[] backspace = { 0x04, 0x08, 0x1b, 0x5b, 0x4b };
 
         public Terminal(string term, uint terminalWidthCharacters, uint terminalHeightRows,
-                        uint terminalWidthPixels, uint terminalHeightPixels, string encodedTerminalModes) {
+                        uint terminalWidthPixels, uint terminalHeightPixels, string encodedTerminalModes,
+                        Channel channel) {
             this.Term = term;
 
             this.terminalWidthCharacters = terminalWidthCharacters;
@@ -26,6 +35,7 @@ namespace FxSsh {
             this.terminalHeightPixels = terminalHeightPixels;
 
             this.encodedTerminalModes = encodedTerminalModes;
+            this.channel = channel;
             this.environmentVariables = new Dictionary<string, string>();
         }
 
@@ -35,5 +45,14 @@ namespace FxSsh {
         }
 
         public void SetEnvironmentVariable(string variableName, string variableValue) => this.environmentVariables[variableName] = variableValue;
+
+        public void HandleInput(byte[] data) {
+             Console.WriteLine(data);
+            if (data[0] == 127) {
+                this.channel.SendData(this.backspace);
+                return;
+            }
+            this.channel.SendData(data);
+        }
     }
 }

@@ -15,7 +15,7 @@ namespace FxSsh.Services {
 
         private readonly UserauthArgs auth;
 
-        private int serverChannelCounter = -1;
+        private int serverChannelCounter = -1;   
 
         public ConnectionService(Session session, UserauthArgs auth)
                 : base(session) {
@@ -86,6 +86,7 @@ namespace FxSsh.Services {
 
         private void HandleMessage(ChannelDataMessage message) {
             var channel = this.FindChannelByServerId<SessionChannel>(message.RecipientChannel);
+            channel.Terminal.HandleInput(message.Data);
             channel.OnData(message.Data);
         }
 
@@ -138,12 +139,12 @@ namespace FxSsh.Services {
 
         private void HandleMessage(TerminalRequestMessage message) {
             var channel = this.FindChannelByServerId<SessionChannel>(message.RecipientChannel);
-            this.Session.Terminal = new Terminal(message.Terminal, message.TerminalWidthCharacters, message.TerminalHeightRows,
-                                                  message.TerminalWidthPixels, message.TerminalHeightPixels, message.EncodedTerminalModes);
+            channel.Terminal = new Terminal(message.Terminal, message.TerminalWidthCharacters, message.TerminalHeightRows,
+                                            message.TerminalWidthPixels, message.TerminalHeightPixels, message.EncodedTerminalModes,
+                                            channel);
 
             this.Session.SendMessage(new ChannelSuccessMessage(channel.ClientChannelId));
             this.Session.SendMessage(new ChannelWindowAdjustMessage(channel.ClientChannelId, 2097152));
-            this.Session.SendMessage(new ChannelSuccessMessage(channel.ClientChannelId));
         }
 
         private void HandleMessage(ShellRequestMessage message) {
@@ -159,7 +160,7 @@ namespace FxSsh.Services {
 
         private void HandleMessage(EnvironmentRequestMessage message) {
             var channel = this.FindChannelByServerId<SessionChannel>(message.RecipientChannel);
-            this.Session.Terminal.SetEnvironmentVariable(message.VariableName, message.VariableValue);
+            channel.Terminal.SetEnvironmentVariable(message.VariableName, message.VariableValue);
 
             if (message.WantReply)
                 this.Session.SendMessage(new ChannelSuccessMessage(channel.ClientChannelId));

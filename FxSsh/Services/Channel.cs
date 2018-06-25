@@ -5,6 +5,8 @@ using FxSsh.Messages.Connection;
 
 namespace FxSsh.Services {
     public abstract class Channel {
+        public Terminal Terminal { get; set; }
+
         protected ConnectionService ConnectionService;
 
         protected EventWaitHandle SendingWindowWaitHandle = new ManualResetEvent(false);

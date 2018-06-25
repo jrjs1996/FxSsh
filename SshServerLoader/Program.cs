@@ -74,7 +74,7 @@ namespace SshServerLoader {
         }
 
         static void ServiceDataReceived(object sender, MessageReceivedArgs e) {
-            e.Channel.SendData(e.Data);
+            
         }
     }
 }
