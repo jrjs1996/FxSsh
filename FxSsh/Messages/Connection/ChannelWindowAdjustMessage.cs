@@ -11,6 +11,14 @@ namespace FxSsh.Messages.Connection
 
         public override byte MessageType { get { return MessageNumber; } }
 
+        public ChannelWindowAdjustMessage () { }
+
+        public ChannelWindowAdjustMessage(uint recipientChannel, uint bytesToAdd)
+        {
+            RecipientChannel = recipientChannel;
+            BytesToAdd = bytesToAdd;
+        }
+
         protected override void OnLoad(SshDataWorker reader)
         {
             RecipientChannel = reader.ReadUInt32();

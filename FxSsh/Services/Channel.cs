@@ -1,5 +1,6 @@
 ﻿using FxSsh.Messages.Connection;
 using System;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Threading;
 
@@ -44,7 +45,6 @@ namespace FxSsh.Services
         public bool ServerClosed { get; private set; }
         public bool ServerMarkedEof { get; private set; }
 
-        public event EventHandler<byte[]> DataReceived;
         public event EventHandler EofReceived;
         public event EventHandler CloseReceived;
 
@@ -103,16 +103,6 @@ namespace FxSsh.Services
             CheckBothClosed();
         }
 
-        internal void OnData(byte[] data)
-        {
-            Contract.Requires(data != null);
-
-            ServerAttemptAdjustWindow((uint)data.Length);
-
-            if (DataReceived != null)
-                DataReceived(this, data);
-        }
-
         internal void OnEof()
         {
             ClientMarkedEof = true;
@@ -142,7 +132,7 @@ namespace FxSsh.Services
             _sendingWindowWaitHandle.Reset();
         }
 
-        private void ServerAttemptAdjustWindow(uint messageLength)
+        protected void ServerAttemptAdjustWindow(uint messageLength)
         {
             ServerWindowSize -= messageLength;
             if (ServerWindowSize <= ServerMaxPacketSize)

@@ -19,6 +19,7 @@ namespace FxSsh
     {
 
         internal Dictionary<AuthenticationMethod, bool> AuthenticationMethods;
+        internal Terminal Terminal;
 
         private const byte CarriageReturn = 0x0d;
         private const byte LineFeed = 0x0a;
@@ -57,6 +58,7 @@ namespace FxSsh
         private List<SshService> _services = new List<SshService>();
         private ConcurrentQueue<Message> _blockedMessages = new ConcurrentQueue<Message>();
         private EventWaitHandle _hasBlockedMessagesWaitHandle = new ManualResetEvent(true);
+
 
         public string ServerVersion { get; private set; }
         public string ClientVersion { get; private set; }
@@ -483,6 +485,32 @@ namespace FxSsh
             typeof(Session)
                 .GetMethod("HandleMessage", BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { message.GetType() }, null)
                 .Invoke(this, new[] { message });
+        }
+
+        private void HandleMessage(Messages.Connection.ChannelDataMessage message)
+        {
+            var service = GetService<ConnectionService>();
+            if (service != null)
+                service.HandleMessageCore(message);
+        }
+
+        private void HandleMessage(Messages.Connection.ChannelRequestMessage message)
+        {
+            var service = GetService<ConnectionService>();
+            if (service != null)
+                service.HandleMessageCore(message);
+        }
+
+        private void HandleMessage(Messages.Connection.ChannelOpenMessage message)
+        {
+            var service = GetService<ConnectionService>();
+            if (service != null)
+                service.HandleMessageCore(message);
+        }
+
+        private void HandleMessage(IgnoreMessage message)
+        {
+
         }
 
         private void HandleMessage(Messages.Userauth.RequestMessage message)

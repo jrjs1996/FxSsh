@@ -1,8 +1,10 @@
 ﻿using FxSsh;
 using FxSsh.Services;
 using System;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using FxSsh.Messages;
 
 namespace SshServerLoader
 {
@@ -56,24 +58,31 @@ namespace SshServerLoader
         {
             Console.WriteLine("Channel {0} runs command: \"{1}\".", e.Channel.ServerChannelId, e.CommandText);
 
-            var allow = true; // func(e.CommandText, e.AttachedUserauthArgs);
+            //var allow = true; // func(e.CommandText, e.AttachedUserauthArgs);
+            //
+            //if (!allow)
+            //    return;
+            //
+            //var parser = new Regex(@"(?<cmd>git-receive-pack|git-upload-pack|git-upload-archive) \'/?(?<proj>.+)\.git\'");
+            //var match = parser.Match(e.CommandText);
+            //var command = match.Groups["cmd"].Value;
+            //var project = match.Groups["proj"].Value;
+            //
+            //var git = new GitService(command, project);
+            //
+            //e.Channel.DataReceived += (ss, ee) => git.OnData(ee);
+            //e.Channel.CloseReceived += (ss, ee) => git.OnClose();
+            //git.DataReceived += (ss, ee) => e.Channel.SendData(ee);
+            //git.CloseReceived += (ss, ee) => e.Channel.SendClose(ee);
+            //
+            //git.Start();
+            e.Channel.SendData(Encoding.ASCII.GetBytes(".]0;root@server: ~.root@server:~# "));
+            e.Channel.DataReceived += service_dataReceived;
+        }
 
-            if (!allow)
-                return;
-
-            var parser = new Regex(@"(?<cmd>git-receive-pack|git-upload-pack|git-upload-archive) \'/?(?<proj>.+)\.git\'");
-            var match = parser.Match(e.CommandText);
-            var command = match.Groups["cmd"].Value;
-            var project = match.Groups["proj"].Value;
-
-            var git = new GitService(command, project);
-
-            e.Channel.DataReceived += (ss, ee) => git.OnData(ee);
-            e.Channel.CloseReceived += (ss, ee) => git.OnClose();
-            git.DataReceived += (ss, ee) => e.Channel.SendData(ee);
-            git.CloseReceived += (ss, ee) => e.Channel.SendClose(ee);
-
-            git.Start();
+        static void service_dataReceived(object sender, MessageReceivedArgs e)
+        {
+            e.Channel.SendData(e.Data);
         }
     }
 }

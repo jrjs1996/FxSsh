@@ -10,6 +10,13 @@ namespace FxSsh.Messages.Connection
 
         public override byte MessageType { get { return MessageNumber; } }
 
+        public ChannelSuccessMessage() {}
+
+        public ChannelSuccessMessage(uint recipientChannel)
+        {
+            RecipientChannel = recipientChannel;
+        }
+
         protected override void OnGetPacket(SshDataWorker writer)
         {
             writer.Write(RecipientChannel);

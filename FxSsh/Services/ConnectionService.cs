@@ -2,10 +2,12 @@
 using FxSsh.Messages.Connection;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using FxSsh.Messages.Userauth;
 
 namespace FxSsh.Services
 {
@@ -69,8 +71,16 @@ namespace FxSsh.Services
             switch (message.RequestType)
             {
                 case "exec":
-                    var msg = Message.LoadFrom<CommandRequestMessage>(message);
-                    HandleMessage(msg);
+                    var execMsg = Message.LoadFrom<CommandRequestMessage>(message);
+                    HandleMessage(execMsg);
+                    break;
+                case "pty-req":
+                    var termMsg = Message.LoadFrom<TerminalRequestMessage>(message);
+                    HandleMessage(termMsg);
+                    break;
+                case "shell":
+                    var shellMsg = Message.LoadFrom<ShellRequestMessage>(message);
+                    HandleMessage(shellMsg);
                     break;
                 default:
                     if (message.WantReply)
@@ -84,7 +94,8 @@ namespace FxSsh.Services
 
         private void HandleMessage(ChannelDataMessage message)
         {
-            var channel = FindChannelByServerId<Channel>(message.RecipientChannel);
+            var channel = FindChannelByServerId<SessionChannel>(message.RecipientChannel);
+            
             channel.OnData(message.Data);
         }
 
@@ -137,6 +148,31 @@ namespace FxSsh.Services
             if (CommandOpened != null)
             {
                 var args = new SessionRequestedArgs(channel, message.Command, _auth);
+                CommandOpened(this, args);
+            }
+        }
+
+        private void HandleMessage(TerminalRequestMessage message)
+        {
+            var channel = FindChannelByServerId<SessionChannel>(message.RecipientChannel);
+            _session.Terminal = new Terminal(message.Terminal, message.TerminalWidthCharacters, message.TerminalHeightRows,
+                message.TerminalWidthPixels, message.TerminalHeightPixels, message.EncodedTerminalModes);
+
+            _session.SendMessage(new ChannelSuccessMessage(channel.ClientChannelId));
+            _session.SendMessage(new ChannelWindowAdjustMessage(channel.ClientChannelId, 2097152));
+            _session.SendMessage(new ChannelSuccessMessage(channel.ClientChannelId));
+        }
+
+        private void HandleMessage(ShellRequestMessage message)
+        {
+            var channel = FindChannelByServerId<SessionChannel>(message.RecipientChannel);
+
+            if (message.WantReply)
+                _session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
+
+            if (CommandOpened != null)
+            {
+                var args = new SessionRequestedArgs(channel, "shell", _auth);
                 CommandOpened(this, args);
             }
         }

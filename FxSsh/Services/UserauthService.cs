@@ -46,6 +46,7 @@ namespace FxSsh.Services
                     HandleMessage(passwordMsg);
                     break;
                 case "hostbased":
+                    break;
                 case "none":
                     var noneMsg = Message.LoadFrom<NoneRequestMessage>(message);
                     HandleMessage(noneMsg);
@@ -93,10 +94,7 @@ namespace FxSsh.Services
 
                 if (verifed)
                 {
-                    _session.RegisterService(message.ServiceName, args);
-                    if (Succeed != null)
-                        Succeed(this, message.ServiceName);
-                    _session.SendMessage(new SuccessMessage());
+                    AuthenticationSuccessful(message, args);
                     return;
                 }
                 else
@@ -112,8 +110,11 @@ namespace FxSsh.Services
 
         private void HandleMessage(NoneRequestMessage message)
         {
+            var args = new UserauthArgs(null, null, null);
+
             if (_session.AuthenticationMethods == null)
             {
+                AuthenticationSuccessful(message, args);
                 _session.SendMessage(new SuccessMessage());
                 return;
             }
@@ -121,6 +122,7 @@ namespace FxSsh.Services
             var remainingAuthenticationMethods = GetRemainingAuthenticationMethods();
             if (remainingAuthenticationMethods.Count == 0)
             {
+                AuthenticationSuccessful(message, args);
                 _session.SendMessage(new SuccessMessage());
                 return;
             }
@@ -130,8 +132,11 @@ namespace FxSsh.Services
 
         private void HandleMessage(PasswordRequestMessage message)
         {
+            var args = new UserauthArgs(null, null, null);
+
             if (_session.AuthenticationMethods == null)
             {
+
                 _session.SendMessage(new FailureMessage());
                 return;
             }
@@ -158,6 +163,14 @@ namespace FxSsh.Services
                 return;
             }
 
+            AuthenticationSuccessful(message, args);
+        }
+
+        private void AuthenticationSuccessful(RequestMessage message, UserauthArgs args)
+        {
+            _session.RegisterService(message.ServiceName, args);
+            if (Succeed != null)
+                Succeed(this, message.ServiceName);
             _session.SendMessage(new SuccessMessage());
         }
 
