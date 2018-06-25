@@ -1,16 +1,11 @@
-﻿using System;
+﻿namespace FxSsh.Messages.Userauth {
+    [Message("SSH_MSG_USERAUTH_SUCCESS", messageNumber)]
+    public class SuccessMessage : UserauthServiceMessage {
+        private const byte messageNumber = 52;
 
-namespace FxSsh.Messages.Userauth
-{
-    [Message("SSH_MSG_USERAUTH_SUCCESS", MessageNumber)]
-    public class SuccessMessage : UserauthServiceMessage
-    {
-        private const byte MessageNumber = 52;
+        public override byte MessageType => messageNumber;
 
-        public override byte MessageType { get { return MessageNumber; } }
-
-        protected override void OnGetPacket(SshDataWorker writer)
-        {
+        protected override void OnGetPacket(SshDataWorker writer) {
         }
     }
 }

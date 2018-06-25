@@ -3,37 +3,28 @@ using System.Diagnostics.Contracts;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace FxSsh.Algorithms
-{
+namespace FxSsh.Algorithms {
     [ContractClass(typeof(PublicKeyAlgorithmContract))]
-    public abstract class PublicKeyAlgorithm
-    {
-        public PublicKeyAlgorithm(string key)
-        {
-            if (!string.IsNullOrEmpty(key))
-            {
-                var bytes = Convert.FromBase64String(key);
-                ImportKey(bytes);
-            }
+    public abstract class PublicKeyAlgorithm {
+        protected PublicKeyAlgorithm(string key) {
+            if (string.IsNullOrEmpty(key)) return;
+            var bytes = Convert.FromBase64String(key);
+            this.ImportKey(bytes);
         }
 
         public abstract string Name { get; }
 
-        public string GetFingerprint()
-        {
-            using (var md5 = MD5.Create())
-            {
-                var bytes = md5.ComputeHash(CreateKeyAndCertificatesData());
+        public string GetFingerprint() {
+            using (var md5 = MD5.Create()) {
+                var bytes = md5.ComputeHash(this.CreateKeyAndCertificatesData());
                 return BitConverter.ToString(bytes).Replace('-', ':');
             }
         }
 
-        public byte[] GetSignature(byte[] signatureData)
-        {
+        public byte[] GetSignature(byte[] signatureData) {
             Contract.Requires(signatureData != null);
 
-            using (var worker = new SshDataWorker(signatureData))
-            {
+            using (var worker = new SshDataWorker(signatureData)) {
                 if (worker.ReadString(Encoding.ASCII) != this.Name)
                     throw new CryptographicException("Signature was not created with this algorithm.");
 
@@ -42,13 +33,11 @@ namespace FxSsh.Algorithms
             }
         }
 
-        public byte[] CreateSignatureData(byte[] data)
-        {
+        public byte[] CreateSignatureData(byte[] data) {
             Contract.Requires(data != null);
 
-            using (var worker = new SshDataWorker())
-            {
-                var signature = SignData(data);
+            using (var worker = new SshDataWorker()) {
+                var signature = this.SignData(data);
 
                 worker.Write(this.Name, Encoding.ASCII);
                 worker.WriteBinary(signature);

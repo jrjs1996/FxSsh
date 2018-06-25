@@ -1,189 +1,154 @@
-﻿using FxSsh.Messages;
-using FxSsh.Messages.Userauth;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
+using FxSsh.Messages;
+using FxSsh.Messages.Userauth;
 
-namespace FxSsh.Services
-{
-    public class UserauthService : SshService
-    {
+namespace FxSsh.Services {
+    public class UserauthService : SshService {
         public UserauthService(Session session)
-            : base(session)
-        {
+                : base(session) {
         }
 
         public event EventHandler<UserauthArgs> Userauth;
 
         public event EventHandler<string> Succeed;
 
-        protected internal override void CloseService()
-        {
+        protected internal override void CloseService() {
         }
 
-        internal void HandleMessageCore(UserauthServiceMessage message)
-        {
+        internal void HandleMessageCore(UserauthServiceMessage message) {
             Contract.Requires(message != null);
 
             typeof(UserauthService)
-                .GetMethod("HandleMessage", BindingFlags.NonPublic | BindingFlags.Instance, null,
-                    new[] {message.GetType()}, null)
-                .Invoke(this, new[] {message});
+                    .GetMethod("HandleMessage", BindingFlags.NonPublic | BindingFlags.Instance, null,
+                               new[] {message.GetType()}, null)?.Invoke(this, new object[] {message});
         }
 
-        private void HandleMessage(RequestMessage message)
-        {
-            switch (message.MethodName)
-            {
+        private void HandleMessage(RequestMessage message) {
+            switch (message.MethodName) {
                 case "publickey":
                     var publicKeyMsg = Message.LoadFrom<PublicKeyRequestMessage>(message);
-                    HandleMessage(publicKeyMsg);
+                    this.HandleMessage(publicKeyMsg);
                     break;
                 case "password":
                     var passwordMsg = Message.LoadFrom<PasswordRequestMessage>(message);
-                    HandleMessage(passwordMsg);
+                    this.HandleMessage(passwordMsg);
                     break;
                 case "hostbased":
                     break;
                 case "none":
                     var noneMsg = Message.LoadFrom<NoneRequestMessage>(message);
-                    HandleMessage(noneMsg);
+                    this.HandleMessage(noneMsg);
                     break;
                 default:
-                    _session.SendMessage(new FailureMessage());
+                    this.Session.SendMessage(new FailureMessage());
                     break;
             }
         }
 
-        private void HandleMessage(PublicKeyRequestMessage message)
-        {
-            if (Session._publicKeyAlgorithms.ContainsKey(message.KeyAlgorithmName))
-            {
-                if (!message.HasSignature)
-                {
-                    _session.SendMessage(new PublicKeyOkMessage
-                    {
+        private void HandleMessage(PublicKeyRequestMessage message) {
+            if (Session.PublicKeyAlgorithms.ContainsKey(message.KeyAlgorithmName)) {
+                if (!message.HasSignature) {
+                    this.Session.SendMessage(new PublicKeyOkMessage {
                         KeyAlgorithmName = message.KeyAlgorithmName,
                         PublicKey = message.PublicKey
                     });
                     return;
                 }
 
-                var keyAlg = Session._publicKeyAlgorithms[message.KeyAlgorithmName](null);
+                var keyAlg = Session.PublicKeyAlgorithms[message.KeyAlgorithmName](null);
                 keyAlg.LoadKeyAndCertificatesData(message.PublicKey);
 
                 var sig = keyAlg.GetSignature(message.Signature);
-                var verifed = false;
+                bool verifed;
 
-                using (var worker = new SshDataWorker())
-                {
-                    worker.WriteBinary(_session.SessionId);
+                using (var worker = new SshDataWorker()) {
+                    worker.WriteBinary(this.Session.SessionId);
                     worker.Write(message.PayloadWithoutSignature);
 
                     verifed = keyAlg.VerifyData(worker.ToByteArray(), sig);
                 }
 
                 var args = new UserauthArgs(message.KeyAlgorithmName, keyAlg.GetFingerprint(), message.PublicKey);
-                if (verifed && Userauth != null)
-                {
-                    Userauth(this, args);
+                if (verifed && this.Userauth != null) {
+                    this.Userauth(this, args);
                     verifed = args.Result;
                 }
 
-                if (verifed)
-                {
-                    AuthenticationSuccessful(message, args);
+                if (verifed) {
+                    this.AuthenticationSuccessful(message, args);
                     return;
-                }
-                else
-                {
-                    _session.SendMessage(new FailureMessage());
+                } else {
+                    this.Session.SendMessage(new FailureMessage());
                     throw new SshConnectionException("Authentication fail.",
-                        DisconnectReason.NoMoreAuthMethodsAvailable);
+                                                     DisconnectReason.NoMoreAuthMethodsAvailable);
                 }
             }
 
-            _session.SendMessage(new FailureMessage());
+            this.Session.SendMessage(new FailureMessage());
         }
 
-        private void HandleMessage(NoneRequestMessage message)
-        {
+        private void HandleMessage(NoneRequestMessage message) {
             var args = new UserauthArgs(null, null, null);
 
-            if (_session.AuthenticationMethods == null)
-            {
-                AuthenticationSuccessful(message, args);
-                _session.SendMessage(new SuccessMessage());
+            if (this.Session.AuthenticationMethods == null) {
+                this.AuthenticationSuccessful(message, args);
+                this.Session.SendMessage(new SuccessMessage());
                 return;
             }
-                   
-            var remainingAuthenticationMethods = GetRemainingAuthenticationMethods();
-            if (remainingAuthenticationMethods.Count == 0)
-            {
-                AuthenticationSuccessful(message, args);
-                _session.SendMessage(new SuccessMessage());
+
+            var remainingAuthenticationMethods = this.GetRemainingAuthenticationMethods();
+            if (remainingAuthenticationMethods.Count == 0) {
+                this.AuthenticationSuccessful(message, args);
+                this.Session.SendMessage(new SuccessMessage());
                 return;
             }
-               
-            _session.SendMessage(new FailureMessage(remainingAuthenticationMethods, false));
+
+            this.Session.SendMessage(new FailureMessage(remainingAuthenticationMethods, false));
         }
 
-        private void HandleMessage(PasswordRequestMessage message)
-        {
+        private void HandleMessage(PasswordRequestMessage message) {
             var args = new UserauthArgs(null, null, null);
 
-            if (_session.AuthenticationMethods == null)
-            {
-
-                _session.SendMessage(new FailureMessage());
+            if (this.Session.AuthenticationMethods == null) {
+                this.Session.SendMessage(new FailureMessage());
                 return;
             }
 
-            if (!_session.AuthenticationMethods.ContainsKey(AuthenticationMethod.Password))
-            {
-                _session.SendMessage(new FailureMessage());
+            if (!this.Session.AuthenticationMethods.ContainsKey(AuthenticationMethod.Password)) {
+                this.Session.SendMessage(new FailureMessage());
                 return;
             }
-            
+
             // Handle authentication here
-            if (message.Password != "password")
-            {
-                _session.SendMessage(new FailureMessage());
+            if (message.Password != "password") {
+                this.Session.SendMessage(new FailureMessage());
                 return;
             }
 
-            _session.AuthenticationMethods[AuthenticationMethod.Password] = true;
+            this.Session.AuthenticationMethods[AuthenticationMethod.Password] = true;
 
-            var remainingAuthenticationMethods = GetRemainingAuthenticationMethods();
-            if (remainingAuthenticationMethods.Count > 0)
-            {
-                _session.SendMessage(new FailureMessage(remainingAuthenticationMethods, true));
+            var remainingAuthenticationMethods = this.GetRemainingAuthenticationMethods();
+            if (remainingAuthenticationMethods.Count > 0) {
+                this.Session.SendMessage(new FailureMessage(remainingAuthenticationMethods, true));
                 return;
             }
 
-            AuthenticationSuccessful(message, args);
+            this.AuthenticationSuccessful(message, args);
         }
 
-        private void AuthenticationSuccessful(RequestMessage message, UserauthArgs args)
-        {
-            _session.RegisterService(message.ServiceName, args);
-            if (Succeed != null)
-                Succeed(this, message.ServiceName);
-            _session.SendMessage(new SuccessMessage());
+        private void AuthenticationSuccessful(RequestMessage message, UserauthArgs args) {
+            this.Session.RegisterService(message.ServiceName, args);
+            this.Succeed?.Invoke(this, message.ServiceName);
+            this.Session.SendMessage(new SuccessMessage());
         }
 
-        private List<AuthenticationMethod> GetRemainingAuthenticationMethods()
-        {
-            if (_session.AuthenticationMethods == null)
-            {
-                return new List<AuthenticationMethod>();
-            }
-            else
-            {
-                return _session.AuthenticationMethods.Where(m => m.Value == false).Select(m => m.Key).ToList();
-            }
+        private List<AuthenticationMethod> GetRemainingAuthenticationMethods() {
+            return this.Session.AuthenticationMethods == null ? new List<AuthenticationMethod>() :
+                           this.Session.AuthenticationMethods.Where(m => m.Value == false).Select(m => m.Key).ToList();
         }
     }
 }

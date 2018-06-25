@@ -1,25 +1,21 @@
-﻿
-namespace FxSsh.Messages.Connection
-{
-    [Message("SSH_MSG_CHANNEL_SUCCESS", MessageNumber)]
-    public class ChannelSuccessMessage : ConnectionServiceMessage
-    {
-        private const byte MessageNumber = 99;
+﻿namespace FxSsh.Messages.Connection {
+    [Message("SSH_MSG_CHANNEL_SUCCESS", messageNumber)]
+    public class ChannelSuccessMessage : ConnectionServiceMessage {
+        private const byte messageNumber = 99;
+
+        public ChannelSuccessMessage() {
+        }
+
+        public ChannelSuccessMessage(uint recipientChannel) {
+            this.RecipientChannel = recipientChannel;
+        }
 
         public uint RecipientChannel { get; set; }
 
-        public override byte MessageType { get { return MessageNumber; } }
+        public override byte MessageType => messageNumber;
 
-        public ChannelSuccessMessage() {}
-
-        public ChannelSuccessMessage(uint recipientChannel)
-        {
-            RecipientChannel = recipientChannel;
-        }
-
-        protected override void OnGetPacket(SshDataWorker writer)
-        {
-            writer.Write(RecipientChannel);
+        protected override void OnGetPacket(SshDataWorker writer) {
+            writer.Write(this.RecipientChannel);
         }
     }
 }

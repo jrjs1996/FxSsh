@@ -1,24 +1,23 @@
-﻿
-namespace FxSsh.Messages.Connection
-{
-    [Message("SSH_MSG_CHANNEL_OPEN_CONFIRMATION", MessageNumber)]
-    public class ChannelOpenConfirmationMessage : ConnectionServiceMessage
-    {
-        private const byte MessageNumber = 91;
+﻿namespace FxSsh.Messages.Connection {
+    [Message("SSH_MSG_CHANNEL_OPEN_CONFIRMATION", messageNumber)]
+    public class ChannelOpenConfirmationMessage : ConnectionServiceMessage {
+        private const byte messageNumber = 91;
 
         public uint RecipientChannel { get; set; }
+
         public uint SenderChannel { get; set; }
+
         public uint InitialWindowSize { get; set; }
+
         public uint MaximumPacketSize { get; set; }
 
-        public override byte MessageType { get { return MessageNumber; } }
+        public override byte MessageType => messageNumber;
 
-        protected override void OnGetPacket(SshDataWorker writer)
-        {
-            writer.Write(RecipientChannel);
-            writer.Write(SenderChannel);
-            writer.Write(InitialWindowSize);
-            writer.Write(MaximumPacketSize);
+        protected override void OnGetPacket(SshDataWorker writer) {
+            writer.Write(this.RecipientChannel);
+            writer.Write(this.SenderChannel);
+            writer.Write(this.InitialWindowSize);
+            writer.Write(this.MaximumPacketSize);
         }
     }
 }

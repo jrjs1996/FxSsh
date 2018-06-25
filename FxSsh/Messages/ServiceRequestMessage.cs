@@ -1,20 +1,16 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 
-namespace FxSsh.Messages
-{
-    [Message("SSH_MSG_SERVICE_REQUEST", MessageNumber)]
-    public class ServiceRequestMessage : Message
-    {
-        private const byte MessageNumber = 5;
+namespace FxSsh.Messages {
+    [Message("SSH_MSG_SERVICE_REQUEST", messageNumber)]
+    public class ServiceRequestMessage : Message {
+        private const byte messageNumber = 5;
 
         public string ServiceName { get; private set; }
 
-        public override byte MessageType { get { return MessageNumber; } }
+        public override byte MessageType => messageNumber;
 
-        protected override void OnLoad(SshDataWorker reader)
-        {
-            ServiceName = reader.ReadString(Encoding.ASCII);
+        protected override void OnLoad(SshDataWorker reader) {
+            this.ServiceName = reader.ReadString(Encoding.ASCII);
         }
     }
 }

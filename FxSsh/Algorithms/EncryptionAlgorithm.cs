@@ -2,16 +2,15 @@
 using System.Diagnostics.Contracts;
 using System.Security.Cryptography;
 
-namespace FxSsh.Algorithms
-{
-    public class EncryptionAlgorithm
-    {
-        private readonly SymmetricAlgorithm _algorithm;
-        private readonly CipherModeEx _mode;
-        private readonly ICryptoTransform _transform;
+namespace FxSsh.Algorithms {
+    public class EncryptionAlgorithm {
+        private readonly SymmetricAlgorithm algorithm;
 
-        public EncryptionAlgorithm(SymmetricAlgorithm algorithm, int keySize, CipherModeEx mode, byte[] key, byte[] iv, bool isEncryption)
-        {
+        private readonly CipherModeEx mode;
+
+        private readonly ICryptoTransform transform;
+
+        public EncryptionAlgorithm(SymmetricAlgorithm algorithm, int keySize, CipherModeEx mode, byte[] key, byte[] iv, bool isEncryption) {
             Contract.Requires(algorithm != null);
             Contract.Requires(key != null);
             Contract.Requires(iv != null);
@@ -22,37 +21,31 @@ namespace FxSsh.Algorithms
             algorithm.IV = iv;
             algorithm.Padding = PaddingMode.None;
 
-            _algorithm = algorithm;
-            _mode = mode;
+            this.algorithm = algorithm;
+            this.mode = mode;
 
-            _transform = CreateTransform(isEncryption);
+            this.transform = this.CreateTransform(isEncryption);
         }
 
-        public int BlockBytesSize
-        {
-            get { return _algorithm.BlockSize >> 3; }
-        }
+        public int BlockBytesSize => this.algorithm.BlockSize >> 3;
 
-        public byte[] Transform(byte[] input)
-        {
+        public byte[] Transform(byte[] input) {
             var output = new byte[input.Length];
-            _transform.TransformBlock(input, 0, input.Length, output, 0);
+            this.transform.TransformBlock(input, 0, input.Length, output, 0);
             return output;
         }
 
-        private ICryptoTransform CreateTransform(bool isEncryption)
-        {
-            switch (_mode)
-            {
-                case CipherModeEx.CBC:
-                    _algorithm.Mode = CipherMode.CBC;
+        private ICryptoTransform CreateTransform(bool isEncryption) {
+            switch (this.mode) {
+                case CipherModeEx.Cbc:
+                    this.algorithm.Mode = CipherMode.CBC;
                     return isEncryption
-                        ? _algorithm.CreateEncryptor()
-                        : _algorithm.CreateDecryptor();
-                case CipherModeEx.CTR:
-                    return new CtrModeCryptoTransform(_algorithm);
+                                   ? this.algorithm.CreateEncryptor()
+                                   : this.algorithm.CreateDecryptor();
+                case CipherModeEx.Ctr:
+                    return new CtrModeCryptoTransform(this.algorithm);
                 default:
-                    throw new InvalidEnumArgumentException(string.Format("Invalid mode: {0}", _mode));
+                    throw new InvalidEnumArgumentException($"Invalid mode: {this.mode}");
             }
         }
     }

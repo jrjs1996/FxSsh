@@ -1,22 +1,21 @@
 ﻿using System.Diagnostics.Contracts;
 
-namespace FxSsh.Services
-{
-    public class SessionRequestedArgs
-    {
-        public SessionRequestedArgs(SessionChannel channel, string command, UserauthArgs userauthArgs)
-        {
+namespace FxSsh.Services {
+    public class SessionRequestedArgs {
+        public SessionRequestedArgs(SessionChannel channel, string command, UserauthArgs userauthArgs) {
             Contract.Requires(channel != null);
             Contract.Requires(command != null);
             Contract.Requires(userauthArgs != null);
 
-            Channel = channel;
-            CommandText = command;
-            AttachedUserauthArgs = userauthArgs;
+            this.Channel = channel;
+            this.CommandText = command;
+            this.AttachedUserauthArgs = userauthArgs;
         }
 
-        public SessionChannel Channel { get; private set; }
-        public string CommandText { get; private set; }
-        public UserauthArgs AttachedUserauthArgs { get; private set; }
+        public SessionChannel Channel { get; }
+
+        public string CommandText { get; }
+
+        public UserauthArgs AttachedUserauthArgs { get; }
     }
 }

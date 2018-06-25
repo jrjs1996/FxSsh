@@ -1,23 +1,20 @@
 ﻿using System.Net;
 
-namespace FxSsh
-{
-    public class StartingInfo
-    {
+namespace FxSsh {
+    public class StartingInfo {
         public const int DefaultPort = 22;
 
         public StartingInfo()
-            : this(IPAddress.IPv6Any, DefaultPort)
-        {
+                : this(IPAddress.IPv6Any, DefaultPort) {
         }
 
-        public StartingInfo(IPAddress localAddress, int port)
-        {
-            LocalAddress = localAddress;
-            Port = port;
+        public StartingInfo(IPAddress localAddress, int port) {
+            this.LocalAddress = localAddress;
+            this.Port = port;
         }
 
-        public IPAddress LocalAddress { get; private set; }
-        public int Port { get; private set; }
+        public IPAddress LocalAddress { get; }
+
+        public int Port { get; }
     }
 }

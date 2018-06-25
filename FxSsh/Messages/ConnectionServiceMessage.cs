@@ -1,7 +1,4 @@
-﻿
-namespace FxSsh.Messages
-{
-    public abstract class ConnectionServiceMessage : Message
-    {
+﻿namespace FxSsh.Messages {
+    public abstract class ConnectionServiceMessage : Message {
     }
 }

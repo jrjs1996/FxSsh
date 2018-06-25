@@ -1,18 +1,14 @@
-﻿
-namespace FxSsh.Messages.Connection
-{
-    public class ExitStatusMessage : ChannelRequestMessage
-    {
+﻿namespace FxSsh.Messages.Connection {
+    public class ExitStatusMessage : ChannelRequestMessage {
         public uint ExitStatus { get; set; }
 
-        protected override void OnGetPacket(SshDataWorker writer)
-        {
-            RequestType = "exit-status";
-            WantReply = false;
+        protected override void OnGetPacket(SshDataWorker writer) {
+            this.RequestType = "exit-status";
+            this.WantReply = false;
 
             base.OnGetPacket(writer);
 
-            writer.Write(ExitStatus);
+            writer.Write(this.ExitStatus);
         }
     }
 }

@@ -1,69 +1,72 @@
-﻿using FxSsh.Messages.Connection;
-using System;
-using System.Diagnostics;
+﻿using System;
 using System.Diagnostics.Contracts;
 using System.Threading;
+using FxSsh.Messages.Connection;
 
-namespace FxSsh.Services
-{
-    public abstract class Channel
-    {
-        protected ConnectionService _connectionService;
-        protected EventWaitHandle _sendingWindowWaitHandle = new ManualResetEvent(false);
+namespace FxSsh.Services {
+    public abstract class Channel {
+        protected ConnectionService ConnectionService;
 
-        public Channel(ConnectionService connectionService,
-            uint clientChannelId, uint clientInitialWindowSize, uint clientMaxPacketSize,
-            uint serverChannelId)
-        {
+        protected EventWaitHandle SendingWindowWaitHandle = new ManualResetEvent(false);
+
+        protected Channel(ConnectionService connectionService,
+                       uint clientChannelId, uint clientInitialWindowSize, uint clientMaxPacketSize,
+                       uint serverChannelId) {
             Contract.Requires(connectionService != null);
 
-            _connectionService = connectionService;
+            this.ConnectionService = connectionService;
 
-            ClientChannelId = clientChannelId;
-            ClientInitialWindowSize = clientInitialWindowSize;
-            ClientWindowSize = clientInitialWindowSize;
-            ClientMaxPacketSize = clientMaxPacketSize;
+            this.ClientChannelId = clientChannelId;
+            this.ClientInitialWindowSize = clientInitialWindowSize;
+            this.ClientWindowSize = clientInitialWindowSize;
+            this.ClientMaxPacketSize = clientMaxPacketSize;
 
-            ServerChannelId = serverChannelId;
-            ServerInitialWindowSize = Session.InitialLocalWindowSize;
-            ServerWindowSize = Session.InitialLocalWindowSize;
-            ServerMaxPacketSize = Session.LocalChannelDataPacketSize;
+            this.ServerChannelId = serverChannelId;
+            this.ServerInitialWindowSize = Session.InitialLocalWindowSize;
+            this.ServerWindowSize = Session.InitialLocalWindowSize;
+            this.ServerMaxPacketSize = Session.LocalChannelDataPacketSize;
         }
 
-        public uint ClientChannelId { get; private set; }
-        public uint ClientInitialWindowSize { get; private set; }
-        public uint ClientWindowSize { get; protected set; }
-        public uint ClientMaxPacketSize { get; private set; }
+        public uint ClientChannelId { get; }
 
-        public uint ServerChannelId { get; private set; }
-        public uint ServerInitialWindowSize { get; private set; }
+        public uint ClientInitialWindowSize { get; }
+
+        public uint ClientWindowSize { get; protected set; }
+
+        public uint ClientMaxPacketSize { get; }
+
+        public uint ServerChannelId { get; }
+
+        public uint ServerInitialWindowSize { get; }
+
         public uint ServerWindowSize { get; protected set; }
-        public uint ServerMaxPacketSize { get; private set; }
+
+        public uint ServerMaxPacketSize { get; }
 
         public bool ClientClosed { get; private set; }
+
         public bool ClientMarkedEof { get; private set; }
+
         public bool ServerClosed { get; private set; }
+
         public bool ServerMarkedEof { get; private set; }
 
         public event EventHandler EofReceived;
+
         public event EventHandler CloseReceived;
 
-        public void SendData(byte[] data)
-        {
+        public void SendData(byte[] data) {
             Contract.Requires(data != null);
 
-            var msg = new ChannelDataMessage();
-            msg.RecipientChannel = ClientChannelId;
+            var msg = new ChannelDataMessage {RecipientChannel = this.ClientChannelId};
 
-            var total = (uint)data.Length;
+            var total = (uint) data.Length;
             var offset = 0L;
             byte[] buf = null;
-            do
-            {
-                var packetSize = Math.Min(Math.Min(ClientWindowSize, ClientMaxPacketSize), total);
-                if (packetSize == 0)
-                {
-                    _sendingWindowWaitHandle.WaitOne();
+            do {
+                var packetSize = Math.Min(Math.Min(this.ClientWindowSize, this.ClientMaxPacketSize), total);
+                if (packetSize == 0) {
+                    this.SendingWindowWaitHandle.WaitOne();
                     continue;
                 }
 
@@ -72,93 +75,79 @@ namespace FxSsh.Services
                 Array.Copy(data, offset, buf, 0, packetSize);
 
                 msg.Data = buf;
-                _connectionService._session.SendMessage(msg);
+                this.ConnectionService.Session.SendMessage(msg);
 
-                ClientWindowSize -= packetSize;
+                this.ClientWindowSize -= packetSize;
                 total -= packetSize;
                 offset += packetSize;
             } while (total > 0);
         }
 
-        public void SendEof()
-        {
-            if (ServerMarkedEof)
+        public void SendEof() {
+            if (this.ServerMarkedEof)
                 return;
 
-            ServerMarkedEof = true;
-            var msg = new ChannelEofMessage { RecipientChannel = ClientChannelId };
-            _connectionService._session.SendMessage(msg);
+            this.ServerMarkedEof = true;
+            var msg = new ChannelEofMessage {RecipientChannel = this.ClientChannelId};
+            this.ConnectionService.Session.SendMessage(msg);
         }
 
-        public void SendClose(uint? exitCode = null)
-        {
-            if (ServerClosed)
+        public void SendClose(uint? exitCode = null) {
+            if (this.ServerClosed)
                 return;
 
-            ServerClosed = true;
+            this.ServerClosed = true;
             if (exitCode.HasValue)
-                _connectionService._session.SendMessage(new ExitStatusMessage { RecipientChannel = ClientChannelId, ExitStatus = exitCode.Value });
-            _connectionService._session.SendMessage(new ChannelCloseMessage { RecipientChannel = ClientChannelId });
+                this.ConnectionService.Session.SendMessage(new ExitStatusMessage {RecipientChannel = this.ClientChannelId, ExitStatus = exitCode.Value});
+            this.ConnectionService.Session.SendMessage(new ChannelCloseMessage {RecipientChannel = this.ClientChannelId});
 
-            CheckBothClosed();
+            this.CheckBothClosed();
         }
 
-        internal void OnEof()
-        {
-            ClientMarkedEof = true;
+        internal void OnEof() {
+            this.ClientMarkedEof = true;
 
-            if (EofReceived != null)
-                EofReceived(this, EventArgs.Empty);
+            this.EofReceived?.Invoke(this, EventArgs.Empty);
         }
 
-        internal void OnClose()
-        {
-            ClientClosed = true;
+        internal void OnClose() {
+            this.ClientClosed = true;
 
-            if (CloseReceived != null)
-                CloseReceived(this, EventArgs.Empty);
+            this.CloseReceived?.Invoke(this, EventArgs.Empty);
 
-            CheckBothClosed();
+            this.CheckBothClosed();
         }
 
-        internal void ClientAdjustWindow(uint bytesToAdd)
-        {
-            ClientWindowSize += bytesToAdd;
+        internal void ClientAdjustWindow(uint bytesToAdd) {
+            this.ClientWindowSize += bytesToAdd;
 
             // pulse multithreadings in same time and unsignal until thread switched
             // don't try to use AutoResetEvent
-            _sendingWindowWaitHandle.Set();
+            this.SendingWindowWaitHandle.Set();
             Thread.Sleep(1);
-            _sendingWindowWaitHandle.Reset();
+            this.SendingWindowWaitHandle.Reset();
         }
 
-        protected void ServerAttemptAdjustWindow(uint messageLength)
-        {
-            ServerWindowSize -= messageLength;
-            if (ServerWindowSize <= ServerMaxPacketSize)
-            {
-                _connectionService._session.SendMessage(new ChannelWindowAdjustMessage
-                {
-                    RecipientChannel = ClientChannelId,
-                    BytesToAdd = ServerInitialWindowSize - ServerWindowSize
-                });
-                ServerWindowSize = ServerInitialWindowSize;
+        protected void ServerAttemptAdjustWindow(uint messageLength) {
+            this.ServerWindowSize -= messageLength;
+            if (this.ServerWindowSize > this.ServerMaxPacketSize) return;
+            this.ConnectionService.Session.SendMessage(new ChannelWindowAdjustMessage {
+                RecipientChannel = this.ClientChannelId,
+                BytesToAdd = this.ServerInitialWindowSize - this.ServerWindowSize
+            });
+            this.ServerWindowSize = this.ServerInitialWindowSize;
+        }
+
+        private void CheckBothClosed() {
+            if (this.ClientClosed && this.ServerClosed) {
+                this.ForceClose();
             }
         }
 
-        private void CheckBothClosed()
-        {
-            if (ClientClosed && ServerClosed)
-            {
-                ForceClose();
-            }
-        }
-
-        internal void ForceClose()
-        {
-            _connectionService.RemoveChannel(this);
-            _sendingWindowWaitHandle.Set();
-            _sendingWindowWaitHandle.Close();
+        internal void ForceClose() {
+            this.ConnectionService.RemoveChannel(this);
+            this.SendingWindowWaitHandle.Set();
+            this.SendingWindowWaitHandle.Close();
         }
     }
 }

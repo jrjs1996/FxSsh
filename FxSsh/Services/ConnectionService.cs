@@ -1,213 +1,193 @@
-﻿using FxSsh.Messages;
-using FxSsh.Messages.Connection;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
-using FxSsh.Messages.Userauth;
+using FxSsh.Messages;
+using FxSsh.Messages.Connection;
 
-namespace FxSsh.Services
-{
-    public class ConnectionService : SshService
-    {
-        private readonly object _locker = new object();
-        private readonly List<Channel> _channels = new List<Channel>();
-        private readonly UserauthArgs _auth = null;
+namespace FxSsh.Services {
+    public class ConnectionService : SshService {
+        private readonly object locker = new object();
 
-        private int _serverChannelCounter = -1;
+        private readonly List<Channel> channels = new List<Channel>();
+
+        private readonly UserauthArgs auth;
+
+        private int serverChannelCounter = -1;
 
         public ConnectionService(Session session, UserauthArgs auth)
-            : base(session)
-        {
+                : base(session) {
             Contract.Requires(auth != null);
 
-            _auth = auth;
+            this.auth = auth;
         }
 
         public event EventHandler<SessionRequestedArgs> CommandOpened;
 
-        protected internal override void CloseService()
-        {
-            lock (_locker)
-                foreach (var channel in _channels.ToArray())
-                {
+        protected internal override void CloseService() {
+            lock (this.locker)
+                foreach (var channel in this.channels.ToArray()) {
                     channel.ForceClose();
                 }
         }
 
-        internal void HandleMessageCore(ConnectionServiceMessage message)
-        {
+        internal void HandleMessageCore(ConnectionServiceMessage message) {
             Contract.Requires(message != null);
 
             typeof(ConnectionService)
-                .GetMethod("HandleMessage", BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { message.GetType() }, null)
-                .Invoke(this, new[] { message });
+                    .GetMethod("HandleMessage", BindingFlags.NonPublic | BindingFlags.Instance, null, new[] {message.GetType()}, null)?
+                    .Invoke(this, new object[] {message});
         }
 
-        private void HandleMessage(ChannelOpenMessage message)
-        {
-            switch (message.ChannelType)
-            {
+        private void HandleMessage(ChannelOpenMessage message) {
+            switch (message.ChannelType) {
                 case "session":
                     var msg = Message.LoadFrom<SessionOpenMessage>(message);
-                    HandleMessage(msg);
+                    this.HandleMessage(msg);
                     break;
                 default:
-                    _session.SendMessage(new ChannelOpenFailureMessage
-                    {
+                    this.Session.SendMessage(new ChannelOpenFailureMessage {
                         RecipientChannel = message.SenderChannel,
                         ReasonCode = ChannelOpenFailureReason.UnknownChannelType,
-                        Description = string.Format("Unknown channel type: {0}.", message.ChannelType),
+                        Description = $"Unknown channel type: {message.ChannelType}.",
                     });
-                    throw new SshConnectionException(string.Format("Unknown channel type: {0}.", message.ChannelType));
+                    throw new SshConnectionException($"Unknown channel type: {message.ChannelType}.");
             }
         }
 
-        private void HandleMessage(ChannelRequestMessage message)
-        {
-            switch (message.RequestType)
-            {
+        private void HandleMessage(ChannelRequestMessage message) {
+            switch (message.RequestType) {
+                case "env":
+                    var envMsg = Message.LoadFrom<EnvironmentRequestMessage>(message);
+                    this.HandleMessage(envMsg);
+                    break;
                 case "exec":
                     var execMsg = Message.LoadFrom<CommandRequestMessage>(message);
-                    HandleMessage(execMsg);
+                    this.HandleMessage(execMsg);
                     break;
                 case "pty-req":
                     var termMsg = Message.LoadFrom<TerminalRequestMessage>(message);
-                    HandleMessage(termMsg);
+                    this.HandleMessage(termMsg);
                     break;
                 case "shell":
                     var shellMsg = Message.LoadFrom<ShellRequestMessage>(message);
-                    HandleMessage(shellMsg);
+                    this.HandleMessage(shellMsg);
                     break;
                 default:
                     if (message.WantReply)
-                        _session.SendMessage(new ChannelFailureMessage
-                        {
-                            RecipientChannel = FindChannelByServerId<Channel>(message.RecipientChannel).ClientChannelId
+                        this.Session.SendMessage(new ChannelFailureMessage {
+                            RecipientChannel = this.FindChannelByServerId<Channel>(message.RecipientChannel).ClientChannelId
                         });
-                    throw new SshConnectionException(string.Format("Unknown request type: {0}.", message.RequestType));
+                    throw new SshConnectionException($"Unknown request type: {message.RequestType}.");
             }
         }
 
-        private void HandleMessage(ChannelDataMessage message)
-        {
-            var channel = FindChannelByServerId<SessionChannel>(message.RecipientChannel);
-            
+        private void HandleMessage(ChannelDataMessage message) {
+            var channel = this.FindChannelByServerId<SessionChannel>(message.RecipientChannel);
             channel.OnData(message.Data);
         }
 
-        private void HandleMessage(ChannelWindowAdjustMessage message)
-        {
-            var channel = FindChannelByServerId<Channel>(message.RecipientChannel);
+        private void HandleMessage(ChannelWindowAdjustMessage message) {
+            var channel = this.FindChannelByServerId<Channel>(message.RecipientChannel);
             channel.ClientAdjustWindow(message.BytesToAdd);
         }
 
-        private void HandleMessage(ChannelEofMessage message)
-        {
-            var channel = FindChannelByServerId<Channel>(message.RecipientChannel);
+        private void HandleMessage(ChannelEofMessage message) {
+            var channel = this.FindChannelByServerId<Channel>(message.RecipientChannel);
             channel.OnEof();
         }
 
-        private void HandleMessage(ChannelCloseMessage message)
-        {
-            var channel = FindChannelByServerId<Channel>(message.RecipientChannel);
+        private void HandleMessage(ChannelCloseMessage message) {
+            var channel = this.FindChannelByServerId<Channel>(message.RecipientChannel);
             channel.OnClose();
         }
 
-        private void HandleMessage(SessionOpenMessage message)
-        {
+        private void HandleMessage(SessionOpenMessage message) {
             var channel = new SessionChannel(
-                this,
-                message.SenderChannel,
-                message.InitialWindowSize,
-                message.MaximumPacketSize,
-                (uint)Interlocked.Increment(ref _serverChannelCounter));
+                    this,
+                    message.SenderChannel,
+                    message.InitialWindowSize,
+                    message.MaximumPacketSize,
+                    (uint) Interlocked.Increment(ref this.serverChannelCounter));
 
-            lock (_locker)
-                _channels.Add(channel);
+            lock (this.locker)
+                this.channels.Add(channel);
 
-            var msg = new SessionOpenConfirmationMessage();
-            msg.RecipientChannel = channel.ClientChannelId;
-            msg.SenderChannel = channel.ServerChannelId;
-            msg.InitialWindowSize = channel.ServerInitialWindowSize;
-            msg.MaximumPacketSize = channel.ServerMaxPacketSize;
+            var msg = new SessionOpenConfirmationMessage {
+                RecipientChannel = channel.ClientChannelId,
+                SenderChannel = channel.ServerChannelId,
+                InitialWindowSize = channel.ServerInitialWindowSize,
+                MaximumPacketSize = channel.ServerMaxPacketSize
+            };
 
-            _session.SendMessage(msg);
+            this.Session.SendMessage(msg);
         }
 
-        private void HandleMessage(CommandRequestMessage message)
-        {
-            var channel = FindChannelByServerId<SessionChannel>(message.RecipientChannel);
+        private void HandleMessage(CommandRequestMessage message) {
+            var channel = this.FindChannelByServerId<SessionChannel>(message.RecipientChannel);
 
             if (message.WantReply)
-                _session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
+                this.Session.SendMessage(new ChannelSuccessMessage {RecipientChannel = channel.ClientChannelId});
 
-            if (CommandOpened != null)
-            {
-                var args = new SessionRequestedArgs(channel, message.Command, _auth);
-                CommandOpened(this, args);
-            }
+            if (this.CommandOpened == null) return;
+            var args = new SessionRequestedArgs(channel, message.Command, this.auth);
+            this.CommandOpened(this, args);
         }
 
-        private void HandleMessage(TerminalRequestMessage message)
-        {
-            var channel = FindChannelByServerId<SessionChannel>(message.RecipientChannel);
-            _session.Terminal = new Terminal(message.Terminal, message.TerminalWidthCharacters, message.TerminalHeightRows,
-                message.TerminalWidthPixels, message.TerminalHeightPixels, message.EncodedTerminalModes);
+        private void HandleMessage(TerminalRequestMessage message) {
+            var channel = this.FindChannelByServerId<SessionChannel>(message.RecipientChannel);
+            this.Session.Terminal = new Terminal(message.Terminal, message.TerminalWidthCharacters, message.TerminalHeightRows,
+                                                  message.TerminalWidthPixels, message.TerminalHeightPixels, message.EncodedTerminalModes);
 
-            _session.SendMessage(new ChannelSuccessMessage(channel.ClientChannelId));
-            _session.SendMessage(new ChannelWindowAdjustMessage(channel.ClientChannelId, 2097152));
-            _session.SendMessage(new ChannelSuccessMessage(channel.ClientChannelId));
+            this.Session.SendMessage(new ChannelSuccessMessage(channel.ClientChannelId));
+            this.Session.SendMessage(new ChannelWindowAdjustMessage(channel.ClientChannelId, 2097152));
+            this.Session.SendMessage(new ChannelSuccessMessage(channel.ClientChannelId));
         }
 
-        private void HandleMessage(ShellRequestMessage message)
-        {
-            var channel = FindChannelByServerId<SessionChannel>(message.RecipientChannel);
+        private void HandleMessage(ShellRequestMessage message) {
+            var channel = this.FindChannelByServerId<SessionChannel>(message.RecipientChannel);
 
             if (message.WantReply)
-                _session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
+                this.Session.SendMessage(new ChannelSuccessMessage {RecipientChannel = channel.ClientChannelId});
 
-            if (CommandOpened != null)
-            {
-                var args = new SessionRequestedArgs(channel, "shell", _auth);
-                CommandOpened(this, args);
-            }
+            if (this.CommandOpened == null) return;
+            var args = new SessionRequestedArgs(channel, "shell", this.auth);
+            this.CommandOpened(this, args);
         }
 
-        private T FindChannelByClientId<T>(uint id) where T : Channel
-        {
-            lock (_locker)
-            {
-                var channel = _channels.FirstOrDefault(x => x.ClientChannelId == id) as T;
-                if (channel == null)
-                    throw new SshConnectionException(string.Format("Invalid client channel id {0}.", id),
-                        DisconnectReason.ProtocolError);
+        private void HandleMessage(EnvironmentRequestMessage message) {
+            var channel = this.FindChannelByServerId<SessionChannel>(message.RecipientChannel);
+            this.Session.Terminal.SetEnvironmentVariable(message.VariableName, message.VariableValue);
+
+            if (message.WantReply)
+                this.Session.SendMessage(new ChannelSuccessMessage(channel.ClientChannelId));
+        }
+
+        private T FindChannelByClientId<T>(uint id) where T : Channel {
+            lock (this.locker) {
+                if (!(this.channels.FirstOrDefault(x => x.ClientChannelId == id) is T channel))
+                    throw new SshConnectionException($"Invalid client channel id {id}.",
+                                                     DisconnectReason.ProtocolError);
 
                 return channel;
             }
         }
 
-        private T FindChannelByServerId<T>(uint id) where T : Channel
-        {
-            lock (_locker)
-            {
-                var channel = _channels.FirstOrDefault(x => x.ServerChannelId == id) as T;
-                if (channel == null)
-                    throw new SshConnectionException(string.Format("Invalid server channel id {0}.", id),
-                        DisconnectReason.ProtocolError);
+        private T FindChannelByServerId<T>(uint id) where T : Channel {
+            lock (this.locker) {
+                if (!(this.channels.FirstOrDefault(x => x.ServerChannelId == id) is T channel))
+                    throw new SshConnectionException($"Invalid server channel id {id}.",
+                                                     DisconnectReason.ProtocolError);
 
                 return channel;
             }
         }
 
-        internal void RemoveChannel(Channel channel)
-        {
-            lock (_locker)
-            {
-                _channels.Remove(channel);
+        internal void RemoveChannel(Channel channel) {
+            lock (this.locker) {
+                this.channels.Remove(channel);
             }
         }
     }

@@ -1,47 +1,42 @@
-﻿using System;
-using System.Diagnostics.Contracts;
+﻿using System.Diagnostics.Contracts;
 using System.Text;
 
-namespace FxSsh.Messages
-{
-    [Message("SSH_MSG_DISCONNECT", MessageNumber)]
-    public class DisconnectMessage : Message
-    {
-        private const byte MessageNumber = 1;
+namespace FxSsh.Messages {
+    [Message("SSH_MSG_DISCONNECT", messageNumber)]
+    public class DisconnectMessage : Message {
+        private const byte messageNumber = 1;
 
-        public DisconnectMessage()
-        {
+        public DisconnectMessage() {
         }
 
-        public DisconnectMessage(DisconnectReason reasonCode, string description = "", string language = "en")
-        {
+        public DisconnectMessage(DisconnectReason reasonCode, string description = "", string language = "en") {
             Contract.Requires(description != null);
             Contract.Requires(language != null);
 
-            ReasonCode = reasonCode;
-            Description = description;
-            Language = language;
+            this.ReasonCode = reasonCode;
+            this.Description = description;
+            this.Language = language;
         }
 
         public DisconnectReason ReasonCode { get; private set; }
+
         public string Description { get; private set; }
+
         public string Language { get; private set; }
 
-        public override byte MessageType { get { return MessageNumber; } }
+        public override byte MessageType => messageNumber;
 
-        protected override void OnLoad(SshDataWorker reader)
-        {
-            ReasonCode = (DisconnectReason)reader.ReadUInt32();
-            Description = reader.ReadString(Encoding.UTF8);
+        protected override void OnLoad(SshDataWorker reader) {
+            this.ReasonCode = (DisconnectReason) reader.ReadUInt32();
+            this.Description = reader.ReadString(Encoding.UTF8);
             if (reader.DataAvailable >= 4)
-                Language = reader.ReadString(Encoding.UTF8);
+                this.Language = reader.ReadString(Encoding.UTF8);
         }
 
-        protected override void OnGetPacket(SshDataWorker writer)
-        {
-            writer.Write((uint)ReasonCode);
-            writer.Write(Description, Encoding.UTF8);
-            writer.Write(Language ?? "en", Encoding.UTF8);
+        protected override void OnGetPacket(SshDataWorker writer) {
+            writer.Write((uint) this.ReasonCode);
+            writer.Write(this.Description, Encoding.UTF8);
+            writer.Write(this.Language ?? "en", Encoding.UTF8);
         }
     }
 }

@@ -1,61 +1,54 @@
-﻿using FxSsh;
-using FxSsh.Services;
-using System;
+﻿using System;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using FxSsh.Messages;
+using FxSsh;
+using FxSsh.Services;
 
-namespace SshServerLoader
-{
-    class Program
-    {
-        static void Main(string[] args)
-        {
+namespace SshServerLoader {
+    class Program {
+        static void Main() {
             var server = new SshServer();
             server.AddHostKey("ssh-rsa", "BwIAAACkAABSU0EyAAQAAAEAAQADKjiW5UyIad8ITutLjcdtejF4wPA1dk1JFHesDMEhU9pGUUs+HPTmSn67ar3UvVj/1t/+YK01FzMtgq4GHKzQHHl2+N+onWK4qbIAMgC6vIcs8u3d38f3NFUfX+lMnngeyxzbYITtDeVVXcLnFd7NgaOcouQyGzYrHBPbyEivswsnqcnF4JpUTln29E1mqt0a49GL8kZtDfNrdRSt/opeexhCuzSjLPuwzTPc6fKgMc6q4MBDBk53vrFY2LtGALrpg3tuydh3RbMLcrVyTNT+7st37goubQ2xWGgkLvo+TZqu3yutxr1oLSaPMSmf9bTACMi5QDicB3CaWNe9eU73MzhXaFLpNpBpLfIuhUaZ3COlMazs7H9LCJMXEL95V6ydnATf7tyO0O+jQp7hgYJdRLR3kNAKT0HU8enE9ZbQEXG88hSCbpf1PvFUytb1QBcotDy6bQ6vTtEAZV+XwnUGwFRexERWuu9XD6eVkYjA4Y3PGtSXbsvhwgH0mTlBOuH4soy8MV4dxGkxM8fIMM0NISTYrPvCeyozSq+NDkekXztFau7zdVEYmhCqIjeMNmRGuiEo8ppJYj4CvR1hc8xScUIw7N4OnLISeAdptm97ADxZqWWFZHno7j7rbNsq5ysdx08OtplghFPx4vNHlS09LwdStumtUel5oIEVMYv+yWBYSPPZBcVY5YFyZFJzd0AOkVtUbEbLuzRs5AtKZG01Ip/8+pZQvJvdbBMLT1BUvHTrccuRbY03SHIaUM3cTUc=");
             server.AddHostKey("ssh-dss", "BwIAAAAiAABEU1MyAAQAAG+6KQWB+crih2Ivb6CZsMe/7NHLimiTl0ap97KyBoBOs1amqXB8IRwI2h9A10R/v0BHmdyjwe0c0lPsegqDuBUfD2VmsDgrZ/i78t7EJ6Sb6m2lVQfTT0w7FYgVk3J1Deygh7UcbIbDoQ+refeRNM7CjSKtdR+/zIwO3Qub2qH+p6iol2iAlh0LP+cw+XlH0LW5YKPqOXOLgMIiO+48HZjvV67pn5LDubxru3ZQLvjOcDY0pqi5g7AJ3wkLq5dezzDOOun72E42uUHTXOzo+Ct6OZXFP53ZzOfjNw0SiL66353c9igBiRMTGn2gZ+au0jMeIaSsQNjQmWD+Lnri39n0gSCXurDaPkec+uaufGSG9tWgGnBdJhUDqwab8P/Ipvo5lS5p6PlzAQAAACqx1Nid0Ea0YAuYPhg+YolsJ/ce");
-            server.ConnectionAccepted += server_ConnectionAccepted;
+            server.ConnectionAccepted += ServerConnectionAccepted;
 
             server.Start();
 
             Task.Delay(-1).Wait();
         }
 
-        static void server_ConnectionAccepted(object sender, Session e)
-        {
+        private static void ServerConnectionAccepted(object sender, Session e) {
             Console.WriteLine("Accepted a client.");
 
-            e.ServiceRegistered += e_ServiceRegistered;
+            e.ServiceRegistered += EServiceRegistered;
         }
 
-        static void e_ServiceRegistered(object sender, SshService e)
-        {
-            var session = (Session)sender;
+        private static void EServiceRegistered(object sender, SshService e) {
+            var session = (Session) sender;
             Console.WriteLine("Session {0} requesting {1}.",
-                BitConverter.ToString(session.SessionId).Replace("-", ""), e.GetType().Name);
+                              BitConverter.ToString(session.SessionId).Replace("-", ""), e.GetType().Name);
 
-            if (e is UserauthService)
-            {
-                var service = (UserauthService)e;
-                service.Userauth += service_Userauth;
-            }
-            else if (e is ConnectionService)
-            {
-                var service = (ConnectionService)e;
-                service.CommandOpened += service_CommandOpened;
+            switch (e) {
+                case UserauthService _: {
+                    var service = (UserauthService) e;
+                    service.Userauth += ServiceUserauth;
+                    break;
+                }
+                case ConnectionService _: {
+                    var service = (ConnectionService) e;
+                    service.CommandOpened += ServiceCommandOpened;
+                    break;
+                }
             }
         }
 
-        static void service_Userauth(object sender, UserauthArgs e)
-        {
+        static void ServiceUserauth(object sender, UserauthArgs e) {
             Console.WriteLine("Client {0} fingerprint: {1}.", e.KeyAlgorithm, e.Fingerprint);
 
             e.Result = true;
         }
 
-        static void service_CommandOpened(object sender, SessionRequestedArgs e)
-        {
+        static void ServiceCommandOpened(object sender, SessionRequestedArgs e) {
             Console.WriteLine("Channel {0} runs command: \"{1}\".", e.Channel.ServerChannelId, e.CommandText);
 
             //var allow = true; // func(e.CommandText, e.AttachedUserauthArgs);
@@ -77,11 +70,10 @@ namespace SshServerLoader
             //
             //git.Start();
             e.Channel.SendData(Encoding.ASCII.GetBytes(".]0;root@server: ~.root@server:~# "));
-            e.Channel.DataReceived += service_dataReceived;
+            e.Channel.DataReceived += ServiceDataReceived;
         }
 
-        static void service_dataReceived(object sender, MessageReceivedArgs e)
-        {
+        static void ServiceDataReceived(object sender, MessageReceivedArgs e) {
             e.Channel.SendData(e.Data);
         }
     }

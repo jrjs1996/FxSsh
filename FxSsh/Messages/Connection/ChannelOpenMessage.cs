@@ -1,26 +1,25 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 
-namespace FxSsh.Messages.Connection
-{
-    [Message("SSH_MSG_CHANNEL_OPEN", MessageNumber)]
-    public class ChannelOpenMessage : ConnectionServiceMessage
-    {
-        private const byte MessageNumber = 90;
+namespace FxSsh.Messages.Connection {
+    [Message("SSH_MSG_CHANNEL_OPEN", messageNumber)]
+    public class ChannelOpenMessage : ConnectionServiceMessage {
+        private const byte messageNumber = 90;
 
         public string ChannelType { get; private set; }
+
         public uint SenderChannel { get; private set; }
+
         public uint InitialWindowSize { get; private set; }
+
         public uint MaximumPacketSize { get; private set; }
 
-        public override byte MessageType { get { return MessageNumber; } }
+        public override byte MessageType => messageNumber;
 
-        protected override void OnLoad(SshDataWorker reader)
-        {
-            ChannelType = reader.ReadString(Encoding.ASCII);
-            SenderChannel = reader.ReadUInt32();
-            InitialWindowSize = reader.ReadUInt32();
-            MaximumPacketSize = reader.ReadUInt32();
+        protected override void OnLoad(SshDataWorker reader) {
+            this.ChannelType = reader.ReadString(Encoding.ASCII);
+            this.SenderChannel = reader.ReadUInt32();
+            this.InitialWindowSize = reader.ReadUInt32();
+            this.MaximumPacketSize = reader.ReadUInt32();
         }
     }
 }

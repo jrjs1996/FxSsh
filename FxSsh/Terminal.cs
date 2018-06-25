@@ -1,29 +1,39 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
-namespace FxSsh
-{
-    class Terminal
-    {
-        public string TERM;
-        public UInt32 TerminalWidthCharacters;
-        public UInt32 TerminalHeightRows;
-        public UInt32 TerminalWidthPixels;
-        public UInt32 TerminalHeightPixels;
-        public string EncodedTerminalModes;
+namespace FxSsh {
+    class Terminal {
+        public string Term;
 
-        public Terminal(string term, UInt32 terminalWidthCharacters, UInt32 terminalHeightRows,
-            UInt32 terminalWidthPixels, UInt32 terminalHeightPixels, string encodedTerminalModes)
-        {
-            TERM = term;
+        private uint terminalWidthCharacters;
 
-            TerminalWidthCharacters = terminalWidthCharacters;
-            TerminalHeightRows = terminalHeightRows;
-            TerminalHeightPixels = terminalWidthPixels;
-            TerminalHeightPixels = terminalHeightPixels;
+        private uint terminalHeightRows;
 
-            encodedTerminalModes = encodedTerminalModes;
+        private uint terminalWidthPixels;
+
+        private uint terminalHeightPixels;
+
+        private string encodedTerminalModes;
+
+        private Dictionary<string, string> environmentVariables;
+
+        public Terminal(string term, uint terminalWidthCharacters, uint terminalHeightRows,
+                        uint terminalWidthPixels, uint terminalHeightPixels, string encodedTerminalModes) {
+            this.Term = term;
+
+            this.terminalWidthCharacters = terminalWidthCharacters;
+            this.terminalHeightRows = terminalHeightRows;
+            this.terminalWidthPixels = terminalWidthPixels;
+            this.terminalHeightPixels = terminalHeightPixels;
+
+            this.encodedTerminalModes = encodedTerminalModes;
+            this.environmentVariables = new Dictionary<string, string>();
         }
+
+        public string GetEnvironmentVariable(string variableName) {
+            this.environmentVariables.TryGetValue(variableName, out var variableValue);
+            return variableValue;
+        }
+
+        public void SetEnvironmentVariable(string variableName, string variableValue) => this.environmentVariables[variableName] = variableValue;
     }
 }

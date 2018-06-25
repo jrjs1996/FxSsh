@@ -2,33 +2,31 @@
 using System.Linq;
 using System.Text;
 
-namespace FxSsh.Messages.Userauth
-{
-    public class PublicKeyRequestMessage : RequestMessage
-    {
+namespace FxSsh.Messages.Userauth {
+    public class PublicKeyRequestMessage : RequestMessage {
         public bool HasSignature { get; private set; }
+
         public string KeyAlgorithmName { get; private set; }
+
         public byte[] PublicKey { get; private set; }
+
         public byte[] Signature { get; private set; }
 
         public byte[] PayloadWithoutSignature { get; private set; }
 
-        protected override void OnLoad(SshDataWorker reader)
-        {
+        protected override void OnLoad(SshDataWorker reader) {
             base.OnLoad(reader);
 
-            if (MethodName != "publickey")
-                throw new ArgumentException(string.Format("Method name {0} is not valid.", MethodName));
+            if (this.MethodName != "publickey")
+                throw new ArgumentException($"Method name {this.MethodName} is not valid.");
 
-            HasSignature = reader.ReadBoolean();
-            KeyAlgorithmName = reader.ReadString(Encoding.ASCII);
-            PublicKey = reader.ReadBinary();
+            this.HasSignature = reader.ReadBoolean();
+            this.KeyAlgorithmName = reader.ReadString(Encoding.ASCII);
+            this.PublicKey = reader.ReadBinary();
 
-            if (HasSignature)
-            {
-                Signature = reader.ReadBinary();
-                PayloadWithoutSignature = RawBytes.Take(RawBytes.Length - Signature.Length - 5).ToArray();
-            }
+            if (!this.HasSignature) return;
+            this.Signature = reader.ReadBinary();
+            this.PayloadWithoutSignature = this.RawBytes.Take(this.RawBytes.Length - this.Signature.Length - 5).ToArray();
         }
     }
 }
