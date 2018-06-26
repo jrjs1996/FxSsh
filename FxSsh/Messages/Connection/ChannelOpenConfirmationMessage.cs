@@ -13,6 +13,13 @@
 
         public override byte MessageType => messageNumber;
 
+        protected override void OnLoad(SshDataWorker reader) {
+            this.RecipientChannel = reader.ReadUInt32();
+            this.SenderChannel = reader.ReadUInt32();
+            this.InitialWindowSize = reader.ReadUInt32();
+            this.MaximumPacketSize = reader.ReadUInt32();
+        }
+
         protected override void OnGetPacket(SshDataWorker writer) {
             writer.Write(this.RecipientChannel);
             writer.Write(this.SenderChannel);

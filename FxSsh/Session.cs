@@ -451,6 +451,16 @@ namespace FxSsh {
                     .Invoke(this, new object[] {message});
         }
 
+        private void HandleMessage(ChannelOpenConfirmationMessage message) {
+            
+        }
+
+        private void HandleMessage(GlobalRequestMessage message) {
+
+            var service = this.GetService<ConnectionService>();
+            service?.HandleMessageCore(message);
+        }
+
         private void HandleMessage(ChannelDataMessage message) {
             var service = this.GetService<ConnectionService>();
             service?.HandleMessageCore(message);

@@ -15,7 +15,9 @@ namespace FxSsh.Services {
 
         private readonly UserauthArgs auth;
 
-        private int serverChannelCounter = -1;   
+        private int serverChannelCounter = -1;
+
+        private int forwardChannelCounter = -1;
 
         public ConnectionService(Session session, UserauthArgs auth)
                 : base(session) {
@@ -85,8 +87,7 @@ namespace FxSsh.Services {
         }
 
         private void HandleMessage(ChannelDataMessage message) {
-            var channel = this.FindChannelByServerId<SessionChannel>(message.RecipientChannel);
-            channel.Terminal.HandleInput(message.Data);
+            var channel = this.FindChannelByServerId<SessionChannel>(message.RecipientChannel); 
             channel.OnData(message.Data);
         }
 
@@ -164,6 +165,36 @@ namespace FxSsh.Services {
 
             if (message.WantReply)
                 this.Session.SendMessage(new ChannelSuccessMessage(channel.ClientChannelId));
+        }
+
+        private void HandleMessage(GlobalRequestMessage message) {
+            switch (message.RequestType) {
+                case "tcpip-forward":
+                    var forwardMsg = Message.LoadFrom<TcpipForwardMessage>(message);
+                    this.HandleMessage(forwardMsg);
+                    break;
+                case "cancel-tcpip-forward":
+                    // Unimplemented
+                    break;
+                default:
+                    break;
+
+            }
+        }
+
+        private void HandleMessage(TcpipForwardMessage message) {
+            var channel = new SessionChannel(
+                    this,
+                    (uint)Interlocked.Increment(ref this.forwardChannelCounter),
+                    1048576,
+                    16384,
+                    (uint)Interlocked.Increment(ref this.serverChannelCounter));
+
+            lock (this.locker)
+                this.channels.Add(channel);
+            this.Session.SendMessage(new RequestSuccessMessage());
+            this.Session.SendMessage(new ForwardedTcpipMessage("forwarded-tcpip", channel.ServerChannelId, channel.ClientInitialWindowSize,
+                                                               channel.ClientMaxPacketSize, message.Address, message.Port, "169.254.73.253", 22));
         }
 
         private T FindChannelByClientId<T>(uint id) where T : Channel {

@@ -6,7 +6,7 @@ using FxSsh.Services;
 
 namespace FxSsh {
     public class Terminal {
-        public string Term;
+        private string term;
 
         private uint terminalWidthCharacters;
 
@@ -27,7 +27,7 @@ namespace FxSsh {
         public Terminal(string term, uint terminalWidthCharacters, uint terminalHeightRows,
                         uint terminalWidthPixels, uint terminalHeightPixels, string encodedTerminalModes,
                         Channel channel) {
-            this.Term = term;
+            this.term = term;
 
             this.terminalWidthCharacters = terminalWidthCharacters;
             this.terminalHeightRows = terminalHeightRows;
@@ -47,7 +47,6 @@ namespace FxSsh {
         public void SetEnvironmentVariable(string variableName, string variableValue) => this.environmentVariables[variableName] = variableValue;
 
         public void HandleInput(byte[] data) {
-             Console.WriteLine(data);
             if (data[0] == 127) {
                 this.channel.SendData(this.backspace);
                 return;

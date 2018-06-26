@@ -5,13 +5,13 @@ namespace FxSsh.Messages.Connection {
     public class ChannelOpenMessage : ConnectionServiceMessage {
         private const byte messageNumber = 90;
 
-        public string ChannelType { get; private set; }
+        public string ChannelType { get; protected set; }
 
-        public uint SenderChannel { get; private set; }
+        public uint SenderChannel { get; protected set; }
 
-        public uint InitialWindowSize { get; private set; }
+        public uint InitialWindowSize { get; protected set; }
 
-        public uint MaximumPacketSize { get; private set; }
+        public uint MaximumPacketSize { get; protected set; }
 
         public override byte MessageType => messageNumber;
 
@@ -20,6 +20,13 @@ namespace FxSsh.Messages.Connection {
             this.SenderChannel = reader.ReadUInt32();
             this.InitialWindowSize = reader.ReadUInt32();
             this.MaximumPacketSize = reader.ReadUInt32();
+        }
+
+        protected override void OnGetPacket(SshDataWorker writer) {
+            writer.Write(this.ChannelType, Encoding.ASCII);
+            writer.Write(this.SenderChannel);
+            writer.Write(this.InitialWindowSize);
+            writer.Write(this.MaximumPacketSize);
         }
     }
 }

@@ -9,6 +9,8 @@ namespace FxSsh.Services {
                 : base(connectionService, clientChannelId, clientInitialWindowSize, clientMaxPacketSize, serverChannelId) {
         }
 
+        public Terminal Terminal { get; set; }
+
         public event EventHandler<MessageReceivedArgs> DataReceived;
 
         internal void OnData(byte[] data) {
@@ -19,6 +21,8 @@ namespace FxSsh.Services {
             var args = new MessageReceivedArgs(this, data);
 
             this.DataReceived?.Invoke(this, args);
+
+            this.Terminal?.HandleInput(data);
         }
     }
 }
