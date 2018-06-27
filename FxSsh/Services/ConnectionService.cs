@@ -6,12 +6,15 @@ using System.Reflection;
 using System.Threading;
 using FxSsh.Messages;
 using FxSsh.Messages.Connection;
+using System.Collections.Immutable;
 
 namespace FxSsh.Services {
     public class ConnectionService : SshService {
         private readonly object locker = new object();
 
         private readonly List<Channel> channels = new List<Channel>();
+
+        public List<Channel> Channels => this.channels;
 
         private readonly UserauthArgs auth;
 

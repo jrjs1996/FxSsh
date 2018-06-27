@@ -23,6 +23,9 @@ namespace SshServerLoader {
                     case "Connect":
                         stream = Connect(server);
                         break;
+                    case "GetConnectedClients":
+                        GetConnectedClients(server);
+                        break;
                     default:
                         if (stream != null) stream.SendCommand(input);
                         break;
@@ -30,6 +33,17 @@ namespace SshServerLoader {
             }
             
             Task.Delay(-1).Wait();         
+        }
+
+        private static void GetConnectedClients(SshServer server) {
+            var clients = server.GetConnectedClients();
+            foreach (var c in clients) {
+                Console.WriteLine(c.Name);
+                var connections = c.Connections;
+                foreach (var connection in connections) {
+                    Console.WriteLine("---> " + connection.WhenConnected);
+                }
+            }
         }
 
         private static Stream Connect(SshServer server) {

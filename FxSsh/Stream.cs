@@ -14,7 +14,7 @@ namespace FxSsh
     public class Stream {
         private Session session;
 
-        private SshClient client;
+        private Renci.SshNet.SshClient client;
 
         public Stream(Session session, string localAddress, uint localPort, Dictionary<string, string> hostKey,
                       List<AuthenticationMethod> authenticationMethods) {
@@ -27,11 +27,13 @@ namespace FxSsh
             this.session.SendMessage(new ForwardedTcpipMessage("forwarded-tcpip", channel.ServerChannelId, channel.ClientInitialWindowSize,
                                                                channel.ClientMaxPacketSize, connectionService.ForwardAddress,
                                                                connectionService.ForwardPort, localAddress, localPort));
-            
-            this.client = new SshClient("169.254.73.20", 22, "james", "password");
+
+            string clientAddress = ((IPEndPoint) this.session.RemoteEndPoint).Address.MapToIPv4().ToString();
+            int clientPort = ((IPEndPoint) this.session.RemoteEndPoint).Port;
+
+            this.client = new Renci.SshNet.SshClient(clientAddress, 22, "root", "password");
             this.client.Connect();
             
-
         }
 
         public void SendCommand(string command) {

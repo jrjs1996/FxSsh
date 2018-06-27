@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
+using System.Net;
 using System.Threading;
 using FxSsh.Messages.Connection;
 
@@ -26,7 +27,11 @@ namespace FxSsh.Services {
             this.ServerInitialWindowSize = Session.InitialLocalWindowSize;
             this.ServerWindowSize = Session.InitialLocalWindowSize;
             this.ServerMaxPacketSize = Session.LocalChannelDataPacketSize;
+
+            this.WhenConnected = DateTime.Now;
         }
+
+        public DateTime WhenConnected { get; }
 
         public uint ClientChannelId { get; }
 
@@ -55,6 +60,8 @@ namespace FxSsh.Services {
         public event EventHandler EofReceived;
 
         public event EventHandler CloseReceived;
+
+        public int ClientPort => ((IPEndPoint)this.ConnectionService.Session.RemoteEndPoint).Port;
 
         public void SendData(byte[] data) {
             Contract.Requires(data != null);

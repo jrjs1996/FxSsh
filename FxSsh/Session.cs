@@ -18,6 +18,7 @@ using FxSsh.Services;
 
 namespace FxSsh {
     public class Session {
+
         internal Dictionary<AuthenticationMethod, bool> AuthenticationMethods;
 
         private const byte carriageReturn = 0x0d;

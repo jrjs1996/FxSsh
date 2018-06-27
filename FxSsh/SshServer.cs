@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Net;
@@ -42,6 +43,10 @@ namespace FxSsh {
             };
             var client = this.sessions.First(s => s.Username == clientName);
             return new Stream(client, "169.254.73.253", 22, this.hostKey, authenticationMethods);
+        }
+
+        public ImmutableArray<SshClient> GetConnectedClients() {
+            return this.sessions.Select(s => new SshClient(s)).ToImmutableArray();
         }
 
         public void Start() {
