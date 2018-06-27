@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -34,6 +35,11 @@ namespace FxSsh {
         public event EventHandler<Session> ConnectionAccepted;
 
         public event EventHandler<Exception> ExceptionRasied;
+
+        public Stream Connect(string clientName, uint port) {
+            var client = this.sessions.First(s => s.Username == clientName);
+            return new Stream(client);
+        }
 
         public void Start() {
             lock (this._lock) {

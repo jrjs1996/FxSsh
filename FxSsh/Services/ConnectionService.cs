@@ -183,7 +183,7 @@ namespace FxSsh.Services {
         }
 
         private void HandleMessage(TcpipForwardMessage message) {
-            var channel = new SessionChannel(
+               var channel = new SessionChannel(
                     this,
                     (uint)Interlocked.Increment(ref this.forwardChannelCounter),
                     1048576,
@@ -192,6 +192,7 @@ namespace FxSsh.Services {
 
             lock (this.locker)
                 this.channels.Add(channel);
+            
             this.Session.SendMessage(new RequestSuccessMessage());
             this.Session.SendMessage(new ForwardedTcpipMessage("forwarded-tcpip", channel.ServerChannelId, channel.ClientInitialWindowSize,
                                                                channel.ClientMaxPacketSize, message.Address, message.Port, "169.254.73.253", 22));

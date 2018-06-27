@@ -16,6 +16,8 @@ namespace FxSsh.Services {
 
         public event EventHandler<string> Succeed;
 
+        internal string Username { get; private set; }
+
         protected internal override void CloseService() {
         }
 
@@ -93,6 +95,8 @@ namespace FxSsh.Services {
 
         private void HandleMessage(NoneRequestMessage message) {
             var args = new UserauthArgs(null, null, null);
+
+            this.Username = message.Username;
 
             if (this.Session.AuthenticationMethods == null) {
                 this.AuthenticationSuccessful(message, args);

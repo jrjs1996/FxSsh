@@ -14,7 +14,10 @@ namespace SshServerLoader {
 
             server.Start();
 
+            
             Task.Delay(-1).Wait();
+
+            
         }
 
         private static void ServerConnectionAccepted(object sender, Session e) {

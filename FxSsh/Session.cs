@@ -84,6 +84,8 @@ namespace FxSsh {
 
         public byte[] SessionId { get; private set; }
 
+        public string Username => this.GetService<UserauthService>().Username;
+
         public T GetService<T>() where T : SshService {
             return (T) this.services.FirstOrDefault(x => x is T);
         }
