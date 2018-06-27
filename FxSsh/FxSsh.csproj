@@ -10,4 +10,8 @@
     <Description>FxSsh is a lightweight SSH server side application as SSH reinforcement of GitCandy. http://gitcandy.com</Description>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="SSH.NET" Version="2016.1.0" />
+  </ItemGroup>
+
 </Project>

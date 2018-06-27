@@ -427,7 +427,7 @@ namespace FxSsh {
             }
         }
 
-        private Message LoadKexInitMessage() {
+        internal Message LoadKexInitMessage() {
             var message = new KeyExchangeInitMessage {
                 KeyExchangeAlgorithms = KeyExchangeAlgorithms.Keys.ToArray(),
                 ServerHostKeyAlgorithms = PublicKeyAlgorithms.Keys.ToArray(),

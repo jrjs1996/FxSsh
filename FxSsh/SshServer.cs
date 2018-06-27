@@ -37,8 +37,11 @@ namespace FxSsh {
         public event EventHandler<Exception> ExceptionRasied;
 
         public Stream Connect(string clientName, uint port) {
+            var authenticationMethods = new List<AuthenticationMethod>() {
+                AuthenticationMethod.Password
+            };
             var client = this.sessions.First(s => s.Username == clientName);
-            return new Stream(client, "169.254.73.253", 22);
+            return new Stream(client, "169.254.73.253", 22, this.hostKey, authenticationMethods);
         }
 
         public void Start() {
@@ -89,7 +92,7 @@ namespace FxSsh {
         }
 
         private void BeginAcceptSocket() {
-            try {
+            try  {
                 this.listenser.BeginAcceptSocket(this.AcceptSocket, null);
             } catch (ObjectDisposedException) {
             } catch {

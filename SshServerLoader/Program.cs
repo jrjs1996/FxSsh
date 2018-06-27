@@ -14,14 +14,17 @@ namespace SshServerLoader {
 
             server.Start();
 
+            Stream stream = null;
+
             while (true) {
                 var input = Console.ReadLine();
 
                 switch (input) {
                     case "Connect":
-                        Connect(server);
+                        stream = Connect(server);
                         break;
                     default:
+                        if (stream != null) stream.SendCommand(input);
                         break;
                 }
             }
@@ -29,8 +32,8 @@ namespace SshServerLoader {
             Task.Delay(-1).Wait();         
         }
 
-        private static void Connect(SshServer server) {
-            server.Connect("root", 22);
+        private static Stream Connect(SshServer server) {
+            return server.Connect("root", 22);
         }
 
         private static void ServerConnectionAccepted(object sender, Session e) {
