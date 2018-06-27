@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -85,6 +86,8 @@ namespace FxSsh {
         public byte[] SessionId { get; private set; }
 
         public string Username => this.GetService<UserauthService>().Username;
+
+        public EndPoint RemoteEndPoint => this.socket.RemoteEndPoint;
 
         public T GetService<T>() where T : SshService {
             return (T) this.services.FirstOrDefault(x => x is T);

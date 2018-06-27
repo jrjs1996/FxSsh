@@ -14,10 +14,23 @@ namespace SshServerLoader {
 
             server.Start();
 
-            
-            Task.Delay(-1).Wait();
+            while (true) {
+                var input = Console.ReadLine();
 
+                switch (input) {
+                    case "Connect":
+                        Connect(server);
+                        break;
+                    default:
+                        break;
+                }
+            }
             
+            Task.Delay(-1).Wait();         
+        }
+
+        private static void Connect(SshServer server) {
+            server.Connect("root", 22);
         }
 
         private static void ServerConnectionAccepted(object sender, Session e) {

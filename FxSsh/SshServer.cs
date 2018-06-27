@@ -38,7 +38,7 @@ namespace FxSsh {
 
         public Stream Connect(string clientName, uint port) {
             var client = this.sessions.First(s => s.Username == clientName);
-            return new Stream(client);
+            return new Stream(client, "169.254.73.253", 22);
         }
 
         public void Start() {

@@ -12,7 +12,7 @@ namespace FxSsh.Services {
         public Terminal Terminal { get; set; }
 
         public event EventHandler<MessageReceivedArgs> DataReceived;
-
+       
         internal void OnData(byte[] data) {
             Contract.Requires(data != null);
 

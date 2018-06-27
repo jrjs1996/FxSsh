@@ -19,6 +19,10 @@ namespace FxSsh.Services {
 
         private int forwardChannelCounter = -1;
 
+        public string ForwardAddress { get; set; }
+
+        public uint ForwardPort { get; set; }
+
         public ConnectionService(Session session, UserauthArgs auth)
                 : base(session) {
             Contract.Requires(auth != null);
@@ -183,7 +187,14 @@ namespace FxSsh.Services {
         }
 
         private void HandleMessage(TcpipForwardMessage message) {
-               var channel = new SessionChannel(
+            this.ForwardAddress = message.Address;
+            this.ForwardPort = message.Port;
+            
+            this.Session.SendMessage(new RequestSuccessMessage());
+        }
+
+        internal SessionChannel AddChannel() {
+            var channel = new SessionChannel(
                     this,
                     (uint)Interlocked.Increment(ref this.forwardChannelCounter),
                     1048576,
@@ -192,10 +203,8 @@ namespace FxSsh.Services {
 
             lock (this.locker)
                 this.channels.Add(channel);
-            
-            this.Session.SendMessage(new RequestSuccessMessage());
-            this.Session.SendMessage(new ForwardedTcpipMessage("forwarded-tcpip", channel.ServerChannelId, channel.ClientInitialWindowSize,
-                                                               channel.ClientMaxPacketSize, message.Address, message.Port, "169.254.73.253", 22));
+
+            return channel;
         }
 
         private T FindChannelByClientId<T>(uint id) where T : Channel {
