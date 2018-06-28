@@ -47,7 +47,7 @@ namespace SshServerLoader {
         }
 
         private static Stream Connect(SshServer server) {
-            return server.Connect("root", 22);
+            return server.Connect("root");
         }
 
         private static void ServerConnectionAccepted(object sender, Session e) {

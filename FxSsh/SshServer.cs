@@ -37,12 +37,12 @@ namespace FxSsh {
 
         public event EventHandler<Exception> ExceptionRasied;
 
-        public Stream Connect(string clientName, uint port) {
+        public Stream Connect(string clientName) {
             var authenticationMethods = new List<AuthenticationMethod>() {
                 AuthenticationMethod.Password
             };
-            var client = this.sessions.First(s => s.Username == clientName);
-            return new Stream(client, "169.254.73.253", 22, this.hostKey, authenticationMethods);
+            var session = this.sessions.First(s => s.Username == clientName);
+            return new Stream(session);
         }
 
         public ImmutableArray<SshClient> GetConnectedClients() {

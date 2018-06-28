@@ -12,26 +12,25 @@ using Renci.SshNet;
 namespace FxSsh
 {
     public class Stream {
-        private Session session;
+        private readonly Session session;
 
-        private Renci.SshNet.SshClient client;
+        private readonly Renci.SshNet.SshClient client;
 
-        public Stream(Session session, string localAddress, uint localPort, Dictionary<string, string> hostKey,
-                      List<AuthenticationMethod> authenticationMethods) {
+        public Stream(Session session) {
             this.session = session;
 
             var connectionService = session.GetService<ConnectionService>();
 
             var channel = connectionService.AddChannel();
 
+            string clientAddress = ((IPEndPoint)this.session.RemoteEndPoint).Address.MapToIPv4().ToString();
+            uint clientPort = (uint)((IPEndPoint)this.session.RemoteEndPoint).Port;
+
             this.session.SendMessage(new ForwardedTcpipMessage("forwarded-tcpip", channel.ServerChannelId, channel.ClientInitialWindowSize,
                                                                channel.ClientMaxPacketSize, connectionService.ForwardAddress,
-                                                               connectionService.ForwardPort, localAddress, localPort));
-
-            string clientAddress = ((IPEndPoint) this.session.RemoteEndPoint).Address.MapToIPv4().ToString();
-            int clientPort = ((IPEndPoint) this.session.RemoteEndPoint).Port;
-
-            this.client = new Renci.SshNet.SshClient(clientAddress, 22, "root", "password");
+                                                               connectionService.ForwardPort, clientAddress, clientPort));
+        
+            this.client = new Renci.SshNet.SshClient(clientAddress, 22, this.session.Username, "password");
             this.client.Connect();
             
         }
