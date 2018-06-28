@@ -58,19 +58,20 @@ namespace SshServerLoader {
         }
 
         private static void Connect(SshServer server) {
-            using (Stream clientStream = server.Connect("client1")) {
+            using (Stream clientStream = server.Connect("bodhi", 80)) {
                 Console.WriteLine("Connected");
                 string message = "GET  / HTTP/1.1\r\n" +
-                                 "User - Agent: Fiddler\r\n" +
+                                 "User - Agent: Server\r\n" +
                                  "Host: 169.254.73.20:80\r\n\r\n";
                 byte[] sendBuffer = Encoding.UTF8.GetBytes(message);
                 clientStream.Write(sendBuffer, 0, sendBuffer.Length);
                 byte[] buffer = new byte[400];
-                clientStream.Read(buffer, 0, 400);
+                clientStream.Read(buffer, 0, 300);
                 Console.WriteLine(Encoding.UTF8.GetString(buffer));
                 byte[] bodyBuffer = new byte[100];
                 clientStream.Read(bodyBuffer, 0, 100);
                 Console.WriteLine(Encoding.UTF8.GetString(bodyBuffer));
+                GetConnectedClients(server);
             }
         }
 

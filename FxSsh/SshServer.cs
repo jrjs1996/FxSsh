@@ -7,9 +7,15 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace FxSsh {
     public class SshServer : IDisposable {
+
+        private IClientKeyRepository clientKeyRepository;
+
+        private IPEndPoint localEndPoint;
+
         private readonly object _lock = new object();
 
         private readonly List<Session> sessions = new List<Session>();
@@ -38,16 +44,15 @@ namespace FxSsh {
 
         public event EventHandler<Exception> ExceptionRasied;
 
-        public Stream Connect(string clientName) {
-            var addresslist = Dns.GetHostEntry(Dns.GetHostName()).AddressList;
-            IPAddress ipAddress = addresslist[3];
-            IPEndPoint ipLocalEndPoint = new IPEndPoint(ipAddress, 80);
-            Socket s = new Socket(AddressFamily.InterNetwork,
-                                  SocketType.Stream,
-                                  ProtocolType.Tcp);
-            //s.Bind(ipLocalEndPoint);
-            s.Connect("169.254.73.20", 80);
-            return new NetworkStream(s);
+        [NotNull]
+        public Stream Connect(string clientName, int portNumber) {
+            var client = this.GetConnectedClients().FirstOrDefault(c => c.Name == clientName);
+
+            var localAddress = IPAddress.Parse("169.254.73.20");
+
+            var localEndPoint = new IPEndPoint(localAddress, portNumber);
+
+            return client.Connect(localEndPoint);
         }
 
         public SshStream ConnectSsh(string clientName) {
@@ -55,8 +60,13 @@ namespace FxSsh {
             return new SshStream(session);
         }
 
+        [NotNull]
         public ImmutableArray<SshClient> GetConnectedClients() {
             return this.sessions.Select(s => new SshClient(s)).ToImmutableArray();
+        }
+
+        public void SetClientKeyRepository([NotNull] IClientKeyRepository clientKeyRep) {
+            this.clientKeyRepository = clientKeyRep;
         }
 
         public void Start() {
