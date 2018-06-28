@@ -1,4 +1,4 @@
-﻿using System;
+﻿ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
@@ -11,12 +11,12 @@ using Renci.SshNet;
 
 namespace FxSsh
 {
-    public class Stream {
+    public class SshStream {
         private readonly Session session;
 
         private readonly Renci.SshNet.SshClient client;
 
-        public Stream(Session session) {
+        public SshStream(Session session) {
             this.session = session;
 
             var connectionService = session.GetService<ConnectionService>();
@@ -41,7 +41,7 @@ namespace FxSsh
             Console.WriteLine(sc.Result);
         }
 
-        ~Stream() {
+        ~SshStream() {
             throw new NotImplementedException();
         }
     }

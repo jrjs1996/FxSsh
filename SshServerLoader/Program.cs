@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using FxSsh;
@@ -14,22 +15,32 @@ namespace SshServerLoader {
 
             server.Start();
 
-            Stream stream = null;
+            SshStream stream = null;
 
-            while (true) {
-                var input = Console.ReadLine();
-
-                switch (input) {
-                    case "Connect":
-                        stream = Connect(server);
-                        break;
-                    case "GetConnectedClients":
-                        GetConnectedClients(server);
-                        break;
-                    default:
-                        if (stream != null) stream.SendCommand(input);
-                        break;
+            var connectedTo = "";
+            while (true) {               
+                if (connectedTo == "") {
+                    var input = Console.ReadLine();
+                    switch (input)
+                    {
+                        case "Connect":
+                            Connect(server);
+                            break;
+                        case "SshConnect":
+                            stream = SshConnect(server, out connectedTo);
+                            break;
+                        case "GetConnectedClients":
+                            GetConnectedClients(server);
+                            break;
+                        default:
+                            break;
+                    }
+                } else {
+                    Console.Write("@" + connectedTo + "$ ");
+                    var input = Console.ReadLine();
+                    stream?.SendCommand(input);
                 }
+                
             }
             
             Task.Delay(-1).Wait();         
@@ -46,8 +57,28 @@ namespace SshServerLoader {
             }
         }
 
-        private static Stream Connect(SshServer server) {
-            return server.Connect("root");
+        private static void Connect(SshServer server) {
+            using (Stream clientStream = server.Connect("client1")) {
+                Console.WriteLine("Connected");
+                string message = "GET  / HTTP/1.1\r\n" +
+                                 "User - Agent: Fiddler\r\n" +
+                                 "Host: 169.254.73.20:80\r\n\r\n";
+                byte[] sendBuffer = Encoding.UTF8.GetBytes(message);
+                clientStream.Write(sendBuffer, 0, sendBuffer.Length);
+                byte[] buffer = new byte[400];
+                clientStream.Read(buffer, 0, 400);
+                Console.WriteLine(Encoding.UTF8.GetString(buffer));
+                byte[] bodyBuffer = new byte[100];
+                clientStream.Read(bodyBuffer, 0, 100);
+                Console.WriteLine(Encoding.UTF8.GetString(bodyBuffer));
+            }
+        }
+
+        private static SshStream SshConnect(SshServer server, out string connectedTo) {
+            Console.WriteLine("Enter the name of the client to connect to:");
+            var clientName = Console.ReadLine();
+            connectedTo = clientName;
+            return server.ConnectSsh(clientName);
         }
 
         private static void ServerConnectionAccepted(object sender, Session e) {

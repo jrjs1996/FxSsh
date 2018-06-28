@@ -100,14 +100,12 @@ namespace FxSsh.Services {
 
             if (this.Session.AuthenticationMethods == null) {
                 this.AuthenticationSuccessful(message, args);
-                this.Session.SendMessage(new SuccessMessage());
                 return;
             }
 
             var remainingAuthenticationMethods = this.GetRemainingAuthenticationMethods();
             if (remainingAuthenticationMethods.Count == 0) {
                 this.AuthenticationSuccessful(message, args);
-                this.Session.SendMessage(new SuccessMessage());
                 return;
             }
 

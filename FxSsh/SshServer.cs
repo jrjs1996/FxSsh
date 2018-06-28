@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -38,11 +39,20 @@ namespace FxSsh {
         public event EventHandler<Exception> ExceptionRasied;
 
         public Stream Connect(string clientName) {
-            var authenticationMethods = new List<AuthenticationMethod>() {
-                AuthenticationMethod.Password
-            };
+            var addresslist = Dns.GetHostEntry(Dns.GetHostName()).AddressList;
+            IPAddress ipAddress = addresslist[3];
+            IPEndPoint ipLocalEndPoint = new IPEndPoint(ipAddress, 80);
+            Socket s = new Socket(AddressFamily.InterNetwork,
+                                  SocketType.Stream,
+                                  ProtocolType.Tcp);
+            //s.Bind(ipLocalEndPoint);
+            s.Connect("169.254.73.20", 80);
+            return new NetworkStream(s);
+        }
+
+        public SshStream ConnectSsh(string clientName) {
             var session = this.sessions.First(s => s.Username == clientName);
-            return new Stream(session);
+            return new SshStream(session);
         }
 
         public ImmutableArray<SshClient> GetConnectedClients() {
@@ -110,9 +120,7 @@ namespace FxSsh {
             try {
                 var socket = this.listenser.EndAcceptSocket(ar);
                 Task.Run(() => {
-                    var authenticationMethods = new List<AuthenticationMethod>() {
-                        AuthenticationMethod.Password
-                    };
+                    var authenticationMethods = new List<AuthenticationMethod>();
 
                     var session = new Session(socket, this.hostKey, authenticationMethods);
                     session.Disconnected += (ss, ee) => {
