@@ -27,7 +27,7 @@ namespace SshServerLoader {
                             Connect(server);
                             break;
                         case "SshConnect":
-                            stream = SshConnect(server, out connectedTo);
+                            //stream = SshConnect(server, out connectedTo);
                             break;
                         case "GetConnectedClients":
                             GetConnectedClients(server);
@@ -75,12 +75,12 @@ namespace SshServerLoader {
             }
         }
 
-        private static SshStream SshConnect(SshServer server, out string connectedTo) {
-            Console.WriteLine("Enter the name of the client to connect to:");
-            var clientName = Console.ReadLine();
-            connectedTo = clientName;
-            return server.ConnectSsh(clientName);
-        }
+        //private static SshStream SshConnect(SshServer server, out string connectedTo) {
+        //    Console.WriteLine("Enter the name of the client to connect to:");
+        //    var clientName = Console.ReadLine();
+        //    connectedTo = clientName;
+        //    return server.ConnectSsh(clientName);
+        //}
 
         private static void ServerConnectionAccepted(object sender, Session e) {
             Console.WriteLine("Accepted a client.");

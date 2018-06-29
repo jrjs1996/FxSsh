@@ -11,9 +11,9 @@ using FxSsh.Services;
 namespace FxSsh
 {
     public class SshClient {
-        private readonly Session session;
+        internal Session session;
 
-        private List<SshClientConnection> connections;
+        internal List<SshClientConnection> connections;
 
         internal SshClient(Session session) {
             this.connections = new List<SshClientConnection>();
@@ -24,6 +24,10 @@ namespace FxSsh
             var newConnection = new SshClientConnection(localEndPoint, this);
             this.connections.Add(newConnection);
             return newConnection.stream;
+        }
+
+        internal void DisconnectSession() {
+            this.session.Disconnect();
         }
 
         public string Name => this.session.Username;

@@ -18,7 +18,7 @@ namespace FxSsh {
 
         private readonly object _lock = new object();
 
-        private readonly List<Session> sessions = new List<Session>();
+        private readonly List<SshClient> clients = new List<SshClient>();
 
         private readonly Dictionary<string, string> hostKey = new Dictionary<string, string>();
 
@@ -55,14 +55,14 @@ namespace FxSsh {
             return client.Connect(localEndPoint);
         }
 
-        public SshStream ConnectSsh(string clientName) {
-            var session = this.sessions.First(s => s.Username == clientName);
-            return new SshStream(session);
-        }
+        //public SshStream ConnectSsh(string clientName) {
+        //    var client = this.clients.First(c => c.Name == clientName);
+        //    return new SshStream(client.);
+        //}
 
         [NotNull]
         public ImmutableArray<SshClient> GetConnectedClients() {
-            return this.sessions.Select(s => new SshClient(s)).ToImmutableArray();
+            return this.clients.ToImmutableArray();
         }
 
         public void SetClientKeyRepository([NotNull] IClientKeyRepository clientKeyRep) {
@@ -98,9 +98,9 @@ namespace FxSsh {
                 this.isDisposed = true;
                 this.started = false;
 
-                foreach (var session in this.sessions) {
+                foreach (var client in this.clients) {
                     try {
-                        session.Disconnect();
+                        client.DisconnectSession();
                     } catch {
                         // ignored
                     }
@@ -134,10 +134,10 @@ namespace FxSsh {
 
                     var session = new Session(socket, this.hostKey, authenticationMethods);
                     session.Disconnected += (ss, ee) => {
-                        lock (this._lock) this.sessions.Remove(session);
+                        lock (this._lock) this.clients.Remove(this.clients.FirstOrDefault(c => c.session == session));
                     };
                     lock (this._lock)
-                        this.sessions.Add(session);
+                        this.clients.Add(new SshClient(session));
                     try {
                         this.ConnectionAccepted?.Invoke(this, session);
                         session.EstablishConnection();
