@@ -11,13 +11,13 @@ using FxSsh.Services;
 namespace FxSsh
 {
     public class SshClient {
-        internal Session session;
+        internal readonly Session Session;
 
         internal List<SshClientConnection> connections;
 
         internal SshClient(Session session) {
             this.connections = new List<SshClientConnection>();
-            this.session = session;
+            this.Session = session;
         }
 
         public Stream Connect(IPEndPoint localEndPoint) {
@@ -27,13 +27,11 @@ namespace FxSsh
         }
 
         internal void DisconnectSession() {
-            this.session.Disconnect();
+            this.Session.Disconnect();
         }
 
-        public string Name => this.session.Username;
+        public string Name => this.Session.Username;
 
-        public ImmutableArray<SshClientConnection> Connections {
-            get { return this.connections.ToImmutableArray(); }
-        }
+        public ImmutableArray<SshClientConnection> Connections => this.connections.ToImmutableArray();
     }
 }

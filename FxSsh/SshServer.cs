@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 namespace FxSsh {
+
     public class SshServer : IDisposable {
 
         private IClientKeyRepository clientKeyRepository;
@@ -44,6 +45,7 @@ namespace FxSsh {
 
         public event EventHandler<Exception> ExceptionRasied;
 
+        
         [NotNull]
         public Stream Connect(string clientName, int portNumber) {
             var client = this.GetConnectedClients().FirstOrDefault(c => c.Name == clientName);
@@ -134,7 +136,7 @@ namespace FxSsh {
 
                     var session = new Session(socket, this.hostKey, authenticationMethods);
                     session.Disconnected += (ss, ee) => {
-                        lock (this._lock) this.clients.Remove(this.clients.FirstOrDefault(c => c.session == session));
+                        lock (this._lock) this.clients.Remove(this.clients.FirstOrDefault(c => c.Session == session));
                     };
                     lock (this._lock)
                         this.clients.Add(new SshClient(session));

@@ -1,0 +1,31 @@
+﻿General TODO:
+
+Connect Ssh is commented out should this be implemented or removed.
+
+Make sure only the functions and variables defined in the API are
+visible by the user no unnessecary public members.
+
+Connect(string clientName, int portNumber)
+
+clientName - The name of the client to connect to. e.g If the client logs
+in as bob@server this would be "bob".
+
+portNumber - The portnumber for the local endpoint.
+
+Process:
+
+Get the client to connect to from the list of clients using clientName.
+
+Create the local IPAddress to use. (Currently hardcoded)
+
+Create the local endpoint using the localAddress and portNumber given.
+
+Call connect on the client found in the first step using the local endpoint
+created.
+
+TODO:
+
+The local IPAddress should not be hardcoded.
+
+Is the portNumber the local port to use or the port to connect to on the server.
+
