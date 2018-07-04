@@ -6,8 +6,10 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Renci.SshNet.Messages.Connection;
 
 namespace FxSsh {
 
@@ -19,7 +21,7 @@ namespace FxSsh {
 
         private readonly object _lock = new object();
 
-        private readonly List<SshClient> clients = new List<SshClient>();
+        private List<SshClient> clients = new List<SshClient>();
 
         private readonly Dictionary<string, string> hostKey = new Dictionary<string, string>();
 
@@ -28,6 +30,10 @@ namespace FxSsh {
         private bool started;
 
         private TcpListener listenser;
+
+        public SshServer(IPAddress address, int port) {
+            this.localEndPoint = new IPEndPoint(address, port);
+        }
 
         public SshServer()
                 : this(new StartingInfo()) {
@@ -45,16 +51,14 @@ namespace FxSsh {
 
         public event EventHandler<Exception> ExceptionRasied;
 
+        private bool connectingClient = false;
         
         [NotNull]
         public Stream Connect(string clientName, int portNumber) {
             var client = this.GetConnectedClients().FirstOrDefault(c => c.Name == clientName);
+            this.connectingClient = true;
 
-            var localAddress = IPAddress.Parse("169.254.73.20");
-
-            var localEndPoint = new IPEndPoint(localAddress, portNumber);
-
-            return client.Connect(localEndPoint);
+            return client.Connect(portNumber);         
         }
 
         //public SshStream ConnectSsh(string clientName) {
@@ -77,9 +81,9 @@ namespace FxSsh {
                 if (this.started)
                     throw new InvalidOperationException("The server is already started.");
 
-                this.listenser = Equals(this.StartingInfo.LocalAddress, IPAddress.IPv6Any)
-                                          ? TcpListener.Create(this.StartingInfo.Port) // dual stack
-                                          : new TcpListener(this.StartingInfo.LocalAddress, this.StartingInfo.Port);
+                this.listenser = Equals(this.localEndPoint.Address, IPAddress.IPv6Any)
+                                         ? TcpListener.Create(this.localEndPoint.Port) // dual stack
+                                         : new TcpListener(this.localEndPoint.Address, this.localEndPoint.Port);
                 this.listenser.ExclusiveAddressUse = false;
                 this.listenser.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 this.listenser.Start();
@@ -138,8 +142,16 @@ namespace FxSsh {
                     session.Disconnected += (ss, ee) => {
                         lock (this._lock) this.clients.Remove(this.clients.FirstOrDefault(c => c.Session == session));
                     };
-                    lock (this._lock)
-                        this.clients.Add(new SshClient(session));
+                    lock (this._lock) {
+                        if (this.connectingClient) {
+                            this.connectingClient = false;
+                            return;
+                        } else {
+                            var client = new SshClient(session);
+                            this.clients.Add(client);
+                        }  
+                    }
+                        
                     try {
                         this.ConnectionAccepted?.Invoke(this, session);
                         session.EstablishConnection();

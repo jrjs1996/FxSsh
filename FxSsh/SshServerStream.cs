@@ -7,7 +7,7 @@ namespace FxSsh {
     public class SshServerStream : NetworkStream {
         private readonly SshClient client;
 
-        public SshServerStream([NotNull] Socket socket, SshClient client) : base(socket) {
+        public SshServerStream([NotNull] Socket socket, [NotNull] SshClient client) : base(socket) {
             this.client = client;
         }
 

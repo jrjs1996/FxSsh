@@ -15,15 +15,14 @@ namespace FxSsh
         // Shouldn't be a reference to channel. B
         public DateTime WhenConnected { get; private set; }
 
-        public SshClientConnection(IPEndPoint localEndPoint, SshClient client) {
+        public SshClientConnection(int port, SshClient client) {
             this.WhenConnected = DateTime.Now;
 
             Socket s = new Socket(AddressFamily.InterNetwork,
                                   SocketType.Stream,
                                   ProtocolType.Tcp);
 
-            this.PortNumber = localEndPoint.Port;
-            s.Connect(localEndPoint);
+            s.Connect(client.Session.remoteAddress, port);
             this.stream = new SshServerStream(s, client);
         }
     }

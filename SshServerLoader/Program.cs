@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using FxSsh;
@@ -8,7 +9,7 @@ using FxSsh.Services;
 namespace SshServerLoader {
     class Program {
         static void Main() {
-            var server = new SshServer();
+            var server = new SshServer(IPAddress.Parse("169.254.73.253"), 22);
             server.AddHostKey("ssh-rsa", "BwIAAACkAABSU0EyAAQAAAEAAQADKjiW5UyIad8ITutLjcdtejF4wPA1dk1JFHesDMEhU9pGUUs+HPTmSn67ar3UvVj/1t/+YK01FzMtgq4GHKzQHHl2+N+onWK4qbIAMgC6vIcs8u3d38f3NFUfX+lMnngeyxzbYITtDeVVXcLnFd7NgaOcouQyGzYrHBPbyEivswsnqcnF4JpUTln29E1mqt0a49GL8kZtDfNrdRSt/opeexhCuzSjLPuwzTPc6fKgMc6q4MBDBk53vrFY2LtGALrpg3tuydh3RbMLcrVyTNT+7st37goubQ2xWGgkLvo+TZqu3yutxr1oLSaPMSmf9bTACMi5QDicB3CaWNe9eU73MzhXaFLpNpBpLfIuhUaZ3COlMazs7H9LCJMXEL95V6ydnATf7tyO0O+jQp7hgYJdRLR3kNAKT0HU8enE9ZbQEXG88hSCbpf1PvFUytb1QBcotDy6bQ6vTtEAZV+XwnUGwFRexERWuu9XD6eVkYjA4Y3PGtSXbsvhwgH0mTlBOuH4soy8MV4dxGkxM8fIMM0NISTYrPvCeyozSq+NDkekXztFau7zdVEYmhCqIjeMNmRGuiEo8ppJYj4CvR1hc8xScUIw7N4OnLISeAdptm97ADxZqWWFZHno7j7rbNsq5ysdx08OtplghFPx4vNHlS09LwdStumtUel5oIEVMYv+yWBYSPPZBcVY5YFyZFJzd0AOkVtUbEbLuzRs5AtKZG01Ip/8+pZQvJvdbBMLT1BUvHTrccuRbY03SHIaUM3cTUc=");
             server.AddHostKey("ssh-dss", "BwIAAAAiAABEU1MyAAQAAG+6KQWB+crih2Ivb6CZsMe/7NHLimiTl0ap97KyBoBOs1amqXB8IRwI2h9A10R/v0BHmdyjwe0c0lPsegqDuBUfD2VmsDgrZ/i78t7EJ6Sb6m2lVQfTT0w7FYgVk3J1Deygh7UcbIbDoQ+refeRNM7CjSKtdR+/zIwO3Qub2qH+p6iol2iAlh0LP+cw+XlH0LW5YKPqOXOLgMIiO+48HZjvV67pn5LDubxru3ZQLvjOcDY0pqi5g7AJ3wkLq5dezzDOOun72E42uUHTXOzo+Ct6OZXFP53ZzOfjNw0SiL66353c9igBiRMTGn2gZ+au0jMeIaSsQNjQmWD+Lnri39n0gSCXurDaPkec+uaufGSG9tWgGnBdJhUDqwab8P/Ipvo5lS5p6PlzAQAAACqx1Nid0Ea0YAuYPhg+YolsJ/ce");
             server.ConnectionAccepted += ServerConnectionAccepted;
@@ -58,16 +59,16 @@ namespace SshServerLoader {
         }
 
         private static void Connect(SshServer server) {
-            using (Stream clientStream = server.Connect("bodhi", 80)) {
+            using (Stream clientStream = server.Connect("client1", 8000)) {
                 Console.WriteLine("Connected");
                 string message = "GET  / HTTP/1.1\r\n" +
                                  "User - Agent: Server\r\n" +
-                                 "Host: 169.254.73.20:80\r\n\r\n";
+                                 "Host: 169.254.73.20:8000\r\n\r\n";
                 byte[] sendBuffer = Encoding.UTF8.GetBytes(message);
                 clientStream.Write(sendBuffer, 0, sendBuffer.Length);
-                byte[] buffer = new byte[400];
-                clientStream.Read(buffer, 0, 300);
-                Console.WriteLine(Encoding.UTF8.GetString(buffer));
+                byte[] headerBuffer = new byte[400];
+                clientStream.Read(headerBuffer, 0, 300);
+                Console.WriteLine(Encoding.UTF8.GetString(headerBuffer));
                 byte[] bodyBuffer = new byte[100];
                 clientStream.Read(bodyBuffer, 0, 100);
                 Console.WriteLine(Encoding.UTF8.GetString(bodyBuffer));

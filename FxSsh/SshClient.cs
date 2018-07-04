@@ -20,8 +20,8 @@ namespace FxSsh
             this.Session = session;
         }
 
-        public Stream Connect(IPEndPoint localEndPoint) {
-            var newConnection = new SshClientConnection(localEndPoint, this);
+        public Stream Connect(int port) {
+            var newConnection = new SshClientConnection(port, this);
             this.connections.Add(newConnection);
             return newConnection.stream;
         }

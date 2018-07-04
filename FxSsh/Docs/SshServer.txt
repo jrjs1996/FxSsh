@@ -5,7 +5,18 @@ Connect Ssh is commented out should this be implemented or removed.
 Make sure only the functions and variables defined in the API are
 visible by the user no unnessecary public members.
 
+When putty disconnects it doesn't remove that client from the list of
+connections.
+
+Make sure everything is disposed of correctly
+
+See if the functions and props can be reorganized/ moved into regions
+
+################################################################################
+
 Connect(string clientName, int portNumber)
+
+Connects to the given client and returns a stream to perform IO on.
 
 clientName - The name of the client to connect to. e.g If the client logs
 in as bob@server this would be "bob".
@@ -27,5 +38,223 @@ TODO:
 
 The local IPAddress should not be hardcoded.
 
-Is the portNumber the local port to use or the port to connect to on the server.
+Obviously portnumber is the port to connect to on the other side, change this.
+
+################################################################################
+
+GetConnectedClients()
+
+Gets an immutable array of the clients connected to the server.
+
+Process:
+
+Return an immutable array of the clients.
+
+################################################################################
+
+SetClientKeyRepository(IClientKeyRepository clientKeyRep)
+
+Sets the client key repository for this server to be clientKeyRep
+
+Process:
+
+Assign clientKeyRepository to be clientKeyRep
+
+################################################################################
+
+Start()
+
+Starts the server.
+
+Process:
+
+Engage the lock. Going into critical code.
+
+Check if disposed by calling this.CheckDisposed()
+
+Check if the server is already started. Throw an exception if it is.
+
+Create a TCPListener using the servers StartingInfo. Assign in to the servers listener.
+
+Set the TCPListener to allow multiple sockets to listen to a specific port.
+
+Allow multiple underlying sockets to listen to a specific port.
+
+Start the listener.
+
+Call BeginAcceptSocket(). Tell the listener to start listening for incoming connection
+attempts.
+
+set this.started to true.
+
+Release the lock
+
+TODO:
+
+Look into the servers disposed property and see what it's used for.
+
+Should I change the way startinginfo is used. Should this be given in the constructor?
+
+Look into exclusiveaddressuse and see if it the settings cause the multiple ports to be used.
+
+################################################################################
+
+Stop()
+
+Stops the server.
+
+Process:
+
+Engage the lock. Going into critical code.
+
+Check if disposed by calling this.CheckDisposed()
+
+Check if the server is started. If it isn't started throw an error.
+
+Stop the listener
+
+Set disposed to be true
+
+Set started to be false
+
+Go through each client that belongs to the server and disconnect them by calling
+client.DisconnectSession().
+
+Release the lock
+
+TODO:
+
+Look into client.DisconnectSession(); is this implemented in a good way. Can the session
+be accessed direcly?
+
+################################################################################
+
+AddHostKey(string type, string xml)
+
+
+
+type - The type of key. e.g ssh-rsa ssh-dss
+
+xml - The key.
+
+Process
+
+Make sure the arguments aren't null using Contract.Requires.
+
+If the hostKey doesn't already contain a key of the given type add the key
+to hostKey.
+
+TODO:
+
+This will have to be removed or changed and the Key repository method given in the
+pdf will have to be used.
+
+################################################################################
+
+BeginAcceptSocket()
+
+Tells the servers TCP listener to start listening for incoming connections.
+
+Process:
+
+Try to:
+	Call BeginAcceptSocket on the servers listener. This begins an asynchronous 
+	operation to accept an incoming connection attempt. this.AcceptSocket() is the
+	callback for when a connection attempt is made.
+
+Did it throw an objectdisposeexception?
+	Do nothing
+Did it throw any other exception?
+	If the server has been started call BeginAcceptSocket() again.
+
+TODO:
+
+I'm not sure why it calls BeginAcceptSocket again for any exceptions besides
+ObjectDisposedException. I'll have to look into this.
+
+
+################################################################################
+
+AcceptSocket()
+
+Accepts the incoming connection. Creates a session and client to store the data
+related to the SSH connection and send and receive SSH messages.
+
+Process:
+
+Try to:
+	Accept the incoming connection attempt and create a socket to handle communication.
+
+	Create a new empty list of authentication methods.
+
+	create a new session with the socket from the first step, this.hostKey and the
+	empty list of authentication methods created.
+
+	Add an event handler for when the session is disconnected. When this happens
+	we want to engage the lock and remove the client that the session belongs to
+	from the servers list of clients. Then disengage the lock.
+
+	Engage the lock
+		Create a new client with the session that was created
+		Add the client to the servers list of clients
+	Disengage the lock
+
+	Try To:
+		If an event handler to be called when a connection has been accepted. Call
+		the event handler.
+
+		Call EstablishConnection on the session that was created.
+
+	If there was a SshConnectionException thrown
+		Call Disconnect on the session that was created with the info from the exception.
+		If the server has an event handler for when an exceptoin is raised call it.
+	If there was any other exception
+		If the server has an event handler for when an exceptoin is raised call it.
+
+If there were any exceptions thrown ignore them and call BeginAcceptSocket() again.
+
+TODO:
+
+Shouldn't create a list of authentication methods here. Should assign
+authentication methods to the server. Allow them to be changed while the
+server is running.
+
+Look into session.Establish connection. See what it does and write a more detailed
+step.
+
+Look into why the exceptions are ignored (on the first level) and BeginAcceptSocket() is
+called again.
+
+################################################################################
+
+CheckDisposed()
+
+Checks if the server is Disposed. If it is throw an objectdisposedexception.
+
+Process
+
+If this.isDisposed throw the exception
+
+################################################################################
+
+Dispose()
+
+Engages the lock and calls Stop.
+
+Process
+
+Engage the lock
+
+	If the server is already disposed return
+
+	Call Stop();
+
+Disengage the lock
+
+Write a better description for the Call Stop() step after looking at Stop()
+
+
+
+
+
 

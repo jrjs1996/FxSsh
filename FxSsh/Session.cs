@@ -54,6 +54,13 @@ namespace FxSsh {
 
         private readonly Socket socket;
 
+        internal IPAddress remoteAddress {
+            get {
+                var remoteEndpoint = this.socket.RemoteEndPoint as IPEndPoint;
+                return remoteEndpoint.Address;
+            }
+        }
+
 #if DEBUG
         private readonly TimeSpan timeout = TimeSpan.FromDays(1);
 #else
