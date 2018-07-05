@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using FxSsh.Messages;
 using FxSsh.Messages.Userauth;
+using JetBrains.Annotations;
 
 namespace FxSsh.Services {
     public class UserauthService : SshService {
@@ -21,9 +22,7 @@ namespace FxSsh.Services {
         protected internal override void CloseService() {
         }
 
-        internal void HandleMessageCore(UserauthServiceMessage message) {
-            Contract.Requires(message != null);
-
+        internal void HandleMessageCore([NotNull] UserauthServiceMessage message) {
             typeof(UserauthService)
                     .GetMethod("HandleMessage", BindingFlags.NonPublic | BindingFlags.Instance, null,
                                new[] {message.GetType()}, null)?.Invoke(this, new object[] {message});

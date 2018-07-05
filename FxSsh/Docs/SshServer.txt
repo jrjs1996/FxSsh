@@ -15,6 +15,10 @@ See if the functions and props can be reorganized/ moved into regions
 Rewrite the connectingClient functionality that locks prevents the server
 from adding a new client when a connection is being created for a client
 
+Better interface for AuthenticationMethods
+
+Actually implement the SshClientExceptions
+
 ################################################################################
 
 Connect(string clientName, int portNumber)

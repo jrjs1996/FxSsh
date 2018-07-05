@@ -1,0 +1,21 @@
+﻿HandleMessageCore(UserauthServiceMessage message)
+
+Calls the the HandleMessage function in UserauthService that corresponds
+to the type of UserauthServiceMessage that message is
+
+################################################################################
+
+HandleMessage(RequestMessage message)
+
+Gets the method name from the request. Converts the message to the proper type
+based on this method name. Then calls the version of HandleMessage that
+corresponds to that type. If the method is not supported send a failure message.
+
+################################################################################
+
+HandleMessage(PublicKeyRequestMessage message)
+
+Process:
+
+
+

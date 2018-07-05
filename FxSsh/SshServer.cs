@@ -8,6 +8,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using FxSsh.Exceptions;
 using JetBrains.Annotations;
 using Renci.SshNet.Messages.Connection;
 
@@ -15,7 +16,7 @@ namespace FxSsh {
 
     public class SshServer : IDisposable {
 
-        private List<AuthenticationMethod> authenticationMethods;
+        public List<AuthenticationMethod> AuthenticationMethods;
 
         private IClientKeyRepository clientKeyRepository;
 
@@ -35,7 +36,7 @@ namespace FxSsh {
 
         public SshServer(IPAddress address, int port) {
             this.localEndPoint = new IPEndPoint(address, port);
-            this.authenticationMethods = new List<AuthenticationMethod>();
+            this.AuthenticationMethods = new List<AuthenticationMethod>();
         }
 
         public SshServer()
@@ -59,9 +60,15 @@ namespace FxSsh {
         [NotNull]
         public Stream Connect(string clientName, int portNumber) {
             var client = this.GetConnectedClients().FirstOrDefault(c => c.Name == clientName);
+            if (client == null)
+                throw new SshClientNotFoundException();
             this.connectingClient = true;
-
-            return client.Connect(portNumber);         
+            try {
+                return client.Connect(portNumber);
+            } catch (Exception exception) {
+                throw new SshClientConnectionException();
+            }
+                     
         }
 
         //public SshStream ConnectSsh(string clientName) {
@@ -143,7 +150,7 @@ namespace FxSsh {
             try {
                 var socket = this.listenser.EndAcceptSocket(ar);
                 Task.Run(() => {
-                    var session = new Session(socket, this.hostKey, this.authenticationMethods);
+                    var session = new Session(socket, this.hostKey, this.AuthenticationMethods);
                     session.Disconnected += (ss, ee) => {
                         lock (this._lock) this.clients.Remove(this.clients.FirstOrDefault(c => c.Session == session));
                     };

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FxSsh;
 using FxSsh.Services;
+using FxSsh.Exceptions;
 
 namespace SshServerLoader {
     class Program {
@@ -59,21 +60,27 @@ namespace SshServerLoader {
         }
 
         private static void Connect(SshServer server) {
-            using (Stream clientStream = server.Connect("client1", 8000)) {
-                Console.WriteLine("Connected");
-                string message = "GET  / HTTP/1.1\r\n" +
-                                 "User - Agent: Server\r\n" +
-                                 "Host: 169.254.73.20:8000\r\n\r\n";
-                byte[] sendBuffer = Encoding.UTF8.GetBytes(message);
-                clientStream.Write(sendBuffer, 0, sendBuffer.Length);
-                byte[] headerBuffer = new byte[400];
-                clientStream.Read(headerBuffer, 0, 300);
-                Console.WriteLine(Encoding.UTF8.GetString(headerBuffer));
-                byte[] bodyBuffer = new byte[100];
-                clientStream.Read(bodyBuffer, 0, 100);
-                Console.WriteLine(Encoding.UTF8.GetString(bodyBuffer));
-                GetConnectedClients(server);
+            try {
+                using (Stream clientStream = server.Connect("client1", 8000))
+                {
+                    Console.WriteLine("Connected");
+                    string message = "GET  / HTTP/1.1\r\n" +
+                                     "User - Agent: Server\r\n" +
+                                     "Host: 169.254.73.20:8000\r\n\r\n";
+                    byte[] sendBuffer = Encoding.UTF8.GetBytes(message);
+                    clientStream.Write(sendBuffer, 0, sendBuffer.Length);
+                    byte[] headerBuffer = new byte[400];
+                    clientStream.Read(headerBuffer, 0, 300);
+                    Console.WriteLine(Encoding.UTF8.GetString(headerBuffer));
+                    byte[] bodyBuffer = new byte[100];
+                    clientStream.Read(bodyBuffer, 0, 100);
+                    Console.WriteLine(Encoding.UTF8.GetString(bodyBuffer));
+                    GetConnectedClients(server);
+                }
+            } catch (SshClientNotFoundException ex) {
+                Console.WriteLine("Error the client was not found in the list of connected clients.");
             }
+
         }
 
         //private static SshStream SshConnect(SshServer server, out string connectedTo) {
