@@ -12,6 +12,9 @@ Make sure everything is disposed of correctly
 
 See if the functions and props can be reorganized/ moved into regions
 
+Rewrite the connectingClient functionality that locks prevents the server
+from adding a new client when a connection is being created for a client
+
 ################################################################################
 
 Connect(string clientName, int portNumber)
@@ -21,24 +24,18 @@ Connects to the given client and returns a stream to perform IO on.
 clientName - The name of the client to connect to. e.g If the client logs
 in as bob@server this would be "bob".
 
-portNumber - The portnumber for the local endpoint.
+portNumber - The portnumber for the remote endpoint.
 
 Process:
 
 Get the client to connect to from the list of clients using clientName.
 
-Create the local IPAddress to use. (Currently hardcoded)
+Set connectingClient to true so that when AcceptSocket is called on the server
+when the socket is created for the connection a new client isn't added to the
+server.
 
-Create the local endpoint using the localAddress and portNumber given.
+Call connect on the client found in the first step using the portnumber given.
 
-Call connect on the client found in the first step using the local endpoint
-created.
-
-TODO:
-
-The local IPAddress should not be hardcoded.
-
-Obviously portnumber is the port to connect to on the other side, change this.
 
 ################################################################################
 
@@ -185,10 +182,8 @@ Process:
 Try to:
 	Accept the incoming connection attempt and create a socket to handle communication.
 
-	Create a new empty list of authentication methods.
-
 	create a new session with the socket from the first step, this.hostKey and the
-	empty list of authentication methods created.
+	servers list of authentication methods.
 
 	Add an event handler for when the session is disconnected. When this happens
 	we want to engage the lock and remove the client that the session belongs to
@@ -214,10 +209,6 @@ Try to:
 If there were any exceptions thrown ignore them and call BeginAcceptSocket() again.
 
 TODO:
-
-Shouldn't create a list of authentication methods here. Should assign
-authentication methods to the server. Allow them to be changed while the
-server is running.
 
 Look into session.Establish connection. See what it does and write a more detailed
 step.

@@ -15,6 +15,8 @@ namespace FxSsh {
 
     public class SshServer : IDisposable {
 
+        private List<AuthenticationMethod> authenticationMethods;
+
         private IClientKeyRepository clientKeyRepository;
 
         private IPEndPoint localEndPoint;
@@ -33,6 +35,7 @@ namespace FxSsh {
 
         public SshServer(IPAddress address, int port) {
             this.localEndPoint = new IPEndPoint(address, port);
+            this.authenticationMethods = new List<AuthenticationMethod>();
         }
 
         public SshServer()
@@ -133,23 +136,20 @@ namespace FxSsh {
         }
 
         private void AcceptSocket(IAsyncResult ar) {
+            if (this.connectingClient){
+                this.connectingClient = false;
+                return;
+            }
             try {
                 var socket = this.listenser.EndAcceptSocket(ar);
                 Task.Run(() => {
-                    var authenticationMethods = new List<AuthenticationMethod>();
-
-                    var session = new Session(socket, this.hostKey, authenticationMethods);
+                    var session = new Session(socket, this.hostKey, this.authenticationMethods);
                     session.Disconnected += (ss, ee) => {
                         lock (this._lock) this.clients.Remove(this.clients.FirstOrDefault(c => c.Session == session));
                     };
                     lock (this._lock) {
-                        if (this.connectingClient) {
-                            this.connectingClient = false;
-                            return;
-                        } else {
-                            var client = new SshClient(session);
-                            this.clients.Add(client);
-                        }  
+                        var client = new SshClient(session);
+                        this.clients.Add(client);
                     }
                         
                     try {
