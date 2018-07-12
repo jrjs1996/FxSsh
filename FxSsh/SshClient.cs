@@ -22,19 +22,10 @@ namespace FxSsh
         }
 
         public Stream Connect(int port) {
-            var connectionService = this.Session.GetService<ConnectionService>();
-
-            var channel = connectionService.AddChannel();
-
-            string clientAddress = ((IPEndPoint)this.Session.RemoteEndPoint).Address.MapToIPv4().ToString();
-            uint clientPort = (uint)((IPEndPoint)this.Session.RemoteEndPoint).Port;
-
-            this.Session.SendMessage(new ForwardedTcpipMessage(channel.ServerChannelId, channel.ClientInitialWindowSize,
-                                                               channel.ClientMaxPacketSize, connectionService.ForwardAddress,
-                                                               connectionService.ForwardPort, clientAddress, clientPort));
+            this.Session.StartReverseConnection();
             var newConnection = new SshClientConnection(port, this);
             this.connections.Add(newConnection);
-             return newConnection.stream;
+            return newConnection.stream;
         }
 
         internal void DisconnectSession() {

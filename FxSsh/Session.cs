@@ -599,6 +599,19 @@ namespace FxSsh {
 
         #endregion
 
+        public void StartReverseConnection() {
+            var connectionService = this.GetService<ConnectionService>();
+
+            var channel = connectionService.AddChannel();
+
+            string clientAddress = ((IPEndPoint)this.RemoteEndPoint).Address.MapToIPv4().ToString();
+            uint clientPort = (uint)((IPEndPoint)this.RemoteEndPoint).Port;
+
+            this.SendMessage(new ForwardedTcpipMessage(channel.ServerChannelId, channel.ClientInitialWindowSize,
+                                                               channel.ClientMaxPacketSize, connectionService.ForwardAddress,
+                                                               connectionService.ForwardPort, clientAddress, clientPort));
+        }
+
         private string ChooseAlgorithm(string[] serverAlgorithms, string[] clientAlgorithms) {
             foreach (var client in clientAlgorithms)
                 foreach (var server in serverAlgorithms)
