@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -11,7 +12,9 @@ namespace SshServerLoader {
     class Program {
         static void Main() {
             var server = new SshServer(IPAddress.Parse("169.254.73.253"), 22);
-
+            var authenticationMethods = new List<FxSsh.AuthenticationMethod>();
+            authenticationMethods.Add(AuthenticationMethod.PublicKey);
+            server.AuthenticationMethods = authenticationMethods;
             // Called when a client has connected to the server.
             server.ConnectionAccepted += ServerConnectionAccepted;
 

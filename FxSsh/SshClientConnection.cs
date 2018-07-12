@@ -17,11 +17,11 @@ namespace FxSsh
 
         public SshClientConnection(int port, SshClient client) {
             this.WhenConnected = DateTime.Now;
-
+            
             Socket s = new Socket(AddressFamily.InterNetwork,
                                   SocketType.Stream,
                                   ProtocolType.Tcp);
-
+            
             s.Connect(client.Session.remoteAddress, port);
             this.stream = new SshServerStream(s, client);
         }

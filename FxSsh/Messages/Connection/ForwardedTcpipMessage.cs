@@ -16,12 +16,12 @@ namespace FxSsh.Messages.Connection
 
         public ForwardedTcpipMessage() { }
 
-        public ForwardedTcpipMessage(string channelType, uint senderChannel,
+        public ForwardedTcpipMessage(uint senderChannel,
                                   uint initialWindowSize, uint maxPacketSize,
                                   string connectedAddress, uint connectedPort,
                                   string originatorAddress, uint originatorPort)
         {
-            this.ChannelType = channelType;
+            this.ChannelType = "forwarded-tcpip";
             this.SenderChannel = senderChannel;
             this.InitialWindowSize = initialWindowSize;
             this.MaximumPacketSize = maxPacketSize;

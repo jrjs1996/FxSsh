@@ -26,7 +26,7 @@ namespace FxSsh
             string clientAddress = ((IPEndPoint)this.session.RemoteEndPoint).Address.MapToIPv4().ToString();
             uint clientPort = (uint)((IPEndPoint)this.session.RemoteEndPoint).Port;
 
-            this.session.SendMessage(new ForwardedTcpipMessage("forwarded-tcpip", channel.ServerChannelId, channel.ClientInitialWindowSize,
+            this.session.SendMessage(new ForwardedTcpipMessage(channel.ServerChannelId, channel.ClientInitialWindowSize,
                                                                channel.ClientMaxPacketSize, connectionService.ForwardAddress,
                                                                connectionService.ForwardPort, clientAddress, clientPort));
         
