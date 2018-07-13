@@ -129,9 +129,7 @@ namespace FxSsh {
             }
         }
 
-        public void AddHostKey(string type, string xml) {
-            Contract.Requires(type != null);
-            Contract.Requires(xml != null);
+        public void AddHostKey([NotNull]string type, [NotNull]string xml) {
 
             if (!this.hostKey.ContainsKey(type))
                 this.hostKey.Add(type, xml);
@@ -155,7 +153,7 @@ namespace FxSsh {
             try {
                 var socket = this.listenser.EndAcceptSocket(ar);
                 Task.Run(() => {
-                    var session = new Session(socket, this.hostKey, this.AuthenticationMethods);
+                    var session = new Session(socket, this.hostKey, this.AuthenticationMethods, this.clientKeyRepository);
                     session.Disconnected += (ss, ee) => {
                         lock (this._lock) this.clients.Remove(this.clients.FirstOrDefault(c => c.Session == session));
                     };

@@ -13,6 +13,7 @@ namespace SshServerLoader {
         static void Main() {
             var server = new SshServer(IPAddress.Parse("169.254.73.253"), 22);
             var authenticationMethods = new List<FxSsh.AuthenticationMethod>();
+            server.SetClientKeyRepository(new ClientKeyRepository());
             authenticationMethods.Add(AuthenticationMethod.PublicKey);
             server.AuthenticationMethods = authenticationMethods;
             // Called when a client has connected to the server.
@@ -25,6 +26,7 @@ namespace SshServerLoader {
                 switch (command)
                 {
                     case "Connect":
+                        if (input.Length < 2) return;
                         Connect(server, input[1]);
                         break;
                     case "GetConnectedClients":
@@ -63,8 +65,8 @@ namespace SshServerLoader {
                     byte[] headerBuffer = new byte[400];
                     clientStream.Read(headerBuffer, 0, 300);
                     Console.WriteLine(Encoding.UTF8.GetString(headerBuffer));
-                    byte[] bodyBuffer = new byte[100];
-                    clientStream.Read(bodyBuffer, 0, 100);
+                    byte[] bodyBuffer = new byte[10000];
+                    clientStream.Read(bodyBuffer, 0, 10000);
                     Console.WriteLine(Encoding.UTF8.GetString(bodyBuffer));
                     GetConnectedClients(server);
                 }
@@ -115,6 +117,14 @@ namespace SshServerLoader {
 
         static void ServiceDataReceived(object sender, MessageReceivedArgs e) {
             
+        }
+    }
+
+    public class ClientKeyRepository : IClientKeyRepository {
+        public byte[] GetKeyForClient(string clientName) {
+            if (clientName == "root") {
+                return Encoding.ASCII.GetBytes("AAAAB3NzaC1yc2EAAAADAQABAAABAQDGsJHozJJSzy215C+JAZ0/NlAfx2RJjhn9de9N2Z2EIhFeRXInwnK4hjfUNv/bM5G1gsT9WjDCDekc3SoZXJVvlCtRdCZ5PQKvon/xFlnJXjjvDEA2R18hxo4caFJFVS4Ir+OwBmk1OIjxKJ3j+5pMPCYFmVGfevmtBmQxON7CZDJHGtH0BSXiZGQdTwtYiKR7Tgsx4aMbFeRDopLesyXm4mI3zdLxAyCogSwHd/Lgv8fAEDNcLMMIC5LPiReENSmHVQ9eSjxnrjByF7Nxf/BB+DMt3mNlDBzOKp2E0W2DQaxR0erJ9J2XHVIYf1C5ehpMxrTuEqzrYo47rPGzAAC5 bodhi@bodhi");
+            } else return null;
         }
     }
 }

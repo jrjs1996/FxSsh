@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Text;
 using FxSsh.Messages;
 using FxSsh.Messages.Userauth;
 using JetBrains.Annotations;
@@ -62,14 +64,11 @@ namespace FxSsh.Services {
 
                 var keyAlg = Session.PublicKeyAlgorithms[message.KeyAlgorithmName](null);
                 keyAlg.LoadKeyAndCertificatesData(message.PublicKey);
-
                 var sig = keyAlg.GetSignature(message.Signature);
                 bool verifed;
-
                 using (var worker = new SshDataWorker()) {
                     worker.WriteBinary(this.Session.SessionId);
                     worker.Write(message.PayloadWithoutSignature);
-
                     verifed = keyAlg.VerifyData(worker.ToByteArray(), sig);
                 }
 
@@ -79,9 +78,23 @@ namespace FxSsh.Services {
                     verifed = args.Result;
                 }
 
-                if (verifed) {
-                    this.AuthenticationSuccessful(message, args);
-                    return;
+                if (verifed) {  
+                    if (this.Session.clientKeyRepository != null) {
+                        if (this.Session.clientKeyRepository.GetKeyForClient(this.Username) != null)
+                        {
+                            var clientKey = Encoding.ASCII.GetString(this.Session.clientKeyRepository.GetKeyForClient(this.Username)).Remove(0, 8);
+                            var messageKey = System.Convert.ToBase64String(message.PublicKey);
+                            if (clientKey == messageKey)
+                                this.AuthenticationSuccessful(message, args);
+                            return;
+                        }
+                        
+                    } else {
+                        this.AuthenticationSuccessful(message, args);
+                        return;
+                    }
+                    
+                    
                 } else {
                     this.Session.SendMessage(new FailureMessage());
                     throw new SshConnectionException("Authentication fail.",
@@ -89,7 +102,8 @@ namespace FxSsh.Services {
                 }
             }
 
-            this.Session.SendMessage(new FailureMessage());
+            throw new SshConnectionException("Authentication fail.",
+                                             DisconnectReason.NoMoreAuthMethodsAvailable);
         }
 
         private void HandleMessage(NoneRequestMessage message) {

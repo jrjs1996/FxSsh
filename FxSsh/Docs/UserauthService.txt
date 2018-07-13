@@ -17,5 +17,10 @@ HandleMessage(PublicKeyRequestMessage message)
 
 Process:
 
+If the sessions public key algorithms contains a key with the given algorithm name
+and the message does not have a signature. Then send a public key OK message with the
+key algorithm name and the messages public key.
+
+Otherwise get the algoritm that was specified in the in the message.
 
 

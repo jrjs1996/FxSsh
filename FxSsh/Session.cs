@@ -15,11 +15,14 @@ using FxSsh.Messages;
 using FxSsh.Messages.Connection;
 using FxSsh.Messages.Userauth;
 using FxSsh.Services;
+using JetBrains.Annotations;
 
 namespace FxSsh {
     public class Session {
 
         internal Dictionary<AuthenticationMethod, bool> AuthenticationMethods;
+
+        public IClientKeyRepository clientKeyRepository;
 
         private const byte carriageReturn = 0x0d;
 
@@ -137,15 +140,14 @@ namespace FxSsh {
             this.ServerVersion = "SSH-2.0-FxSsh";
         }
 
-        public Session(Socket socket, Dictionary<string, string> hostKey,
-                       IReadOnlyCollection<AuthenticationMethod> authenticationMethods) {
-            Contract.Requires(socket != null);
-            Contract.Requires(hostKey != null);
-            Contract.Requires(authenticationMethods != null);
+        public Session([NotNull] Socket socket,[NotNull] Dictionary<string, string> hostKey,
+                       [NotNull] IReadOnlyCollection<AuthenticationMethod> authenticationMethods,
+                       [NotNull] IClientKeyRepository clientKeyRepository) {
 
             this.socket = socket;
             this.hostKey = hostKey.ToDictionary(s => s.Key, s => s.Value);
             this.ServerVersion = "SSH-2.0-FxSsh";
+            this.clientKeyRepository = clientKeyRepository;
 
             this.AuthenticationMethods = new Dictionary<AuthenticationMethod, bool>();
             foreach (var authenticationMethod in authenticationMethods) {
