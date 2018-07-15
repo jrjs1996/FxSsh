@@ -1,4 +1,23 @@
-﻿HandleMessageCore(UserauthServiceMessage message)
+﻿
+UserauthService
+
+Note: More details on SSH authentication and the processes used by this file
+can be found at https://tools.ietf.org/html/rfc4252 .
+
+EventHandler<UserauthArgs> Userauth - Event handler that is called when a user
+is attempting to be authenticated.
+
+EventHandler<string> Succeed - Event handler that is called when a user has
+been authenticated.
+
+string Username - Username of the user the client is attempting to log in as.
+This is set in HandleMessage(NoneRequest message) from the username provided
+in the message.
+
+
+################################################################################
+
+HandleMessageCore(UserauthServiceMessage message)
 
 Calls the the HandleMessage function in UserauthService that corresponds
 to the type of UserauthServiceMessage that message is
@@ -13,14 +32,121 @@ corresponds to that type. If the method is not supported send a failure message.
 
 ################################################################################
 
+HandleMessage(NoneRequestMessage message)
+
+The main purpose for a client sending a none request message is to get the list
+of available authentication methods. If there are no authentication methods in
+the server the client is logged into the server.
+
+Process:
+
+Create the args to call AuthenticationSuccessful with. These will be used to call
+the AuthenticationSuccessful callback for the server.
+
+Get the username from the request.
+
+If the server has no authentication methods the authentication is successful.
+
+Get the remaining authentication methods. If there are no authentication methods
+remaining the authentication was successful.
+
+Send a failure message containing the remaining authentication messages to the
+client.
+
+################################################################################
+
+HandleMessage(PasswordRequestMessage message)
+
+Create the args to call AuthenticationSuccessful with. These will be used to call
+the AuthenticationSuccessful callback for the server.
+
+If the server doesn't have any authentication methods or does not contain the
+password authentication message send a failure message.
+
+? Handle Password authentication
+
+Send an authentication successful message.
+
+TODO:
+
+Implement password authentication.
+
+################################################################################
+
 HandleMessage(PublicKeyRequestMessage message)
 
 Process:
 
-If the sessions public key algorithms contains a key with the given algorithm name
-and the message does not have a signature. Then send a public key OK message with the
-key algorithm name and the messages public key.
+If the Server has no authentication methods or doesn't have the public key
+authentication or the Session does not contain the requested key algorithm
+send a failure message and throw an exception.
 
-Otherwise get the algoritm that was specified in the in the message.
+If the message doesn't have a signature the client is querying whether
+authentication using the "publickey" method is acceptable. (RFC4252). If this
+is the case send a message letting the client know that this form of
+authentication is acceptable.
 
+The next step is to verify the public key. Get the public key algorithm to be
+used from the message. Load the public key into the key algorithm and get the
+signature using the algortim. Verify the signature.
 
+Call the servers Userauth callback. This can be used to do additional
+authentication or any other processing that needs to be done at this point.
+The algorithm name, fingerprint, and publickey are provided as arguments to
+this callback. args.Result can be set to false in this callback if the user
+shouldn't be authenticated.
+
+If verified has been set to false in the UserAuth callback send a Failure
+Message and throw an exception.
+
+If the server has a clientKeyRepository and the user exists in the client
+key repository verify the key with the one stored in the clientKeyRepository.
+If the has been verified to be the users the authentcation was successfull.
+
+? If there is no client key repository or the user wasn't in the client key
+repository send an authentication successful message.
+
+If the user wasn't verified successfully throw an exception.
+
+TODO:
+
+What should be done if there is not clientKeyRepository or the user isn't in
+the client key repository? Should the client still be allowed to log into the
+server or is it an authentication error.
+
+################################################################################
+
+AuthenticationSuccessful(RequestMessage message, UserauthArgs args,
+						 AuthenticationMethod method)
+
+Process:
+
+Mark the authentication method as verified.
+
+Get the remaining authentication methods.
+
+If there are authentication methods remaining send a failure message witht the
+list of remaining authentication methods.
+
+If there are no remaining authentication methods the authentcation was
+successful.
+
+################################################################################
+
+AuthenticationSuccessful(RequestMessage message, UserauthArgs args)
+
+Process:
+
+Register the service requested by the client to session.
+
+If the server has a Succeed callback call it.
+
+Send a success message to the client.
+
+################################################################################
+
+private List<AuthenticationMethod> GetRemainingAuthenticationMethods()
+
+Gets all remaining authentication methods that haven't been verified.
+
+################################################################################

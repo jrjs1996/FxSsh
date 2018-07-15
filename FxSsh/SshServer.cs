@@ -6,11 +6,9 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using FxSsh.Exceptions;
 using JetBrains.Annotations;
-using Renci.SshNet.Messages.Connection;
 
 namespace FxSsh {
 

@@ -123,7 +123,7 @@ namespace SshServerLoader {
     public class ClientKeyRepository : IClientKeyRepository {
         public byte[] GetKeyForClient(string clientName) {
             if (clientName == "root") {
-                return Encoding.ASCII.GetBytes("AAAAB3NzaC1yc2EAAAADAQABAAABAQDGsJHozJJSzy215C+JAZ0/NlAfx2RJjhn9de9N2Z2EIhFeRXInwnK4hjfUNv/bM5G1gsT9WjDCDekc3SoZXJVvlCtRdCZ5PQKvon/xFlnJXjjvDEA2R18hxo4caFJFVS4Ir+OwBmk1OIjxKJ3j+5pMPCYFmVGfevmtBmQxON7CZDJHGtH0BSXiZGQdTwtYiKR7Tgsx4aMbFeRDopLesyXm4mI3zdLxAyCogSwHd/Lgv8fAEDNcLMMIC5LPiReENSmHVQ9eSjxnrjByF7Nxf/BB+DMt3mNlDBzOKp2E0W2DQaxR0erJ9J2XHVIYf1C5ehpMxrTuEqzrYo47rPGzAAC5 bodhi@bodhi");
+                return Encoding.ASCII.GetBytes("AAAAB3NzaC1yc2EAAAADAQABAAABAQDysxSkeZ7zWVHSbCUvEh8/yBRy/ltOS63PLmeTj6wps8JiEFLZu5rF9hKp7uvhZtAgl/t6SDS5nfsD8sdb2LapviIK2wk8T6WqgoxNDgXrIjbipOkEq3FGwWaHUybgfR0c5mqWuehntvZm4xB9DXSQEvOll9iarAr7OamJ/Q3jveE7Wr81ZUKW6iEbxKkW6Z2RQfET9vMhdvcSb8FHoDjzzB/vaHx6Ii9CdsWHV9zfaXQUuMFbNnG+2/uy1Gjv3uSnNUYrZVDHtBZcD9BwtlWkzI4lDUxO9/Iv31DWEvTLQEYYSrqDr/dMYARd/+HAYLROiCjOe54H56pmri3CgODP");
             } else return null;
         }
     }

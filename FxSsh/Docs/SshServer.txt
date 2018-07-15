@@ -21,6 +21,14 @@ Actually implement the SshClientExceptions
 
 ################################################################################
 
+Properties:
+
+List<AuthenticationMethods> AuthenticationMethods - List containing the
+authentication methods to be used when a client is logging into the server.
+These authentication methods are checked in UserauthService.
+
+################################################################################
+
 Connect(string clientName, int portNumber)
 
 Connects to the given client and returns a stream to perform IO on.
