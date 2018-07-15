@@ -24,7 +24,6 @@ namespace FxSsh {
         }
 
         protected override void Dispose(bool disposing) {
-            var clientToRemove = this.client.connections.FirstOrDefault(c => c.stream == this);
             this.client.connections.Remove(this.client.Connections.FirstOrDefault(c => c.stream == this));
             base.Dispose(disposing);
         }

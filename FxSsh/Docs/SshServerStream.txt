@@ -1,0 +1,16 @@
+﻿
+SshServerStream
+
+This is a stream for communicating with a client via a reverse SSH connection.
+
+################################################################################
+
+SshServerStream() - Set the streams client to be the given client. The remaining
+arguments are used to call the base version of the method.
+
+################################################################################
+
+Dispose()
+
+Remove the client connection that this stream belongs to from the clients list
+of connections. Then call the base version of this method.
