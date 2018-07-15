@@ -1,0 +1,53 @@
+﻿
+Terminal
+
+This class is used for storing virtual terminal information. There is currently no use for it.
+If you want to be able to enter commands on the server via an SSH terminal on the client this
+class can be used. For more information on pseudo-terminal requests see:
+https://tools.ietf.org/html/rfc4254
+
+int terminalWidthCharacters - Number of characters that can fit on a line of the virtual
+terminal
+
+int terminalHeightRows - Number of rows that can fit on the virtual terminal.
+
+int terminalWidthPixels - Width of the terminal in pixels
+
+int terminalHeightPixels - Height of the terminal in pixels
+
+string encodedTerminalModes - See https://tools.ietf.org/html/rfc4254
+
+Channel channel - Channel the terminal is on.
+
+Dictionary<string,string> environmentVariables - Environment variables used by the virtual terminal
+
+byte[] backspace - Bytes that represent a backspace when communicating with the client.
+
+################################################################################
+
+Terminal(string term, uint terminalWidthCharacters, uint terminalHeightRows,
+                        uint terminalWidthPixels, uint terminalHeightPixels, string encodedTerminalModes,
+                        Channel channel)
+
+Create a terminal with the properties specified
+
+################################################################################
+
+GetEnvironmentVariable(string variableName)
+
+Gets the value of an environment variable when given its name
+
+################################################################################
+
+SetEnvironmentVariable(string variableName, string variableValue)
+
+Sets the value of the 'variableName' environment variable to the variableValue.
+
+################################################################################
+
+public void HandleInput(byte[] data)
+
+For handling input sent from the client. This method is not complete. All it
+currently does is send the character typed by the client back to the client to
+be represented on their virtual terminal.
+
