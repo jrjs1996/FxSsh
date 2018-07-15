@@ -1,0 +1,24 @@
+﻿
+SshClientConnection
+
+Represents a connection to an SshClient
+
+public int PortNumber: Port on the client to connect to
+
+public DateTime WhenConnected: The instant this connection
+was created.
+
+################################################################################
+
+SshClientConnection(int port, SshClient client)
+
+Process:
+
+Set WhenConnected to be now.
+
+Create a socket to handle communication with the client
+
+Connect to the client via the socket with the port and address of the client.
+
+Set this connections stream to be a new stream created with the newly created
+socket and this connections client
