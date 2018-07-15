@@ -1,0 +1,39 @@
+﻿
+SshStream
+
+Note: This class is not fully implemented yet. It is for opening a reverse SSH client to the client.
+
+################################################################################
+
+public SshStream(Session session)
+
+Process:
+
+Set this streams session to be the session provided.
+
+Get the connection service from the session.
+
+Create a new channel that will be used for the reverse connection.
+
+Get the client address and port.
+
+Send a message to the client letting it know that we want to open up a reverse
+connection with it.
+
+Log into the server with the sessions user name and password. This needs to be
+changed when actually impleminting this.
+
+Open up a connection to the 'client' where the current machine will act as the
+SSH client.
+
+################################################################################
+
+public void SendCommand(string command)
+
+Sends a command via the remote connection and prints the result to the console
+
+################################################################################
+
+~SshStream()
+
+Not implemented yet.
