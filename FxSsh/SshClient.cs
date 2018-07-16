@@ -21,7 +21,8 @@ namespace FxSsh
         }
 
         public Stream Connect(int port) {
-            this.Session.StartReverseConnection();
+            if (!this.Session.ReverseConnectionOpen)
+                this.Session.StartReverseConnection();
             var newConnection = new SshClientConnection(port, this);
             this.connections.Add(newConnection);
             return newConnection.stream;

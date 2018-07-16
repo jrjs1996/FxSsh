@@ -15,7 +15,7 @@ namespace SshServerLoader {
             var authenticationMethods = new List<FxSsh.AuthenticationMethod>();
             server.SetClientKeyRepository(new ClientKeyRepository());
             authenticationMethods.Add(AuthenticationMethod.PublicKey);
-            server.AuthenticationMethods = authenticationMethods;
+            // server.AuthenticationMethods = authenticationMethods;
             // Called when a client has connected to the server.
             server.ConnectionAccepted += ServerConnectionAccepted;
 
@@ -65,8 +65,8 @@ namespace SshServerLoader {
                     byte[] headerBuffer = new byte[400];
                     clientStream.Read(headerBuffer, 0, 300);
                     Console.WriteLine(Encoding.UTF8.GetString(headerBuffer));
-                    byte[] bodyBuffer = new byte[10000];
-                    clientStream.Read(bodyBuffer, 0, 10000);
+                    byte[] bodyBuffer = new byte[100];
+                    clientStream.Read(bodyBuffer, 0, 100);
                     Console.WriteLine(Encoding.UTF8.GetString(bodyBuffer));
                     GetConnectedClients(server);
                 }

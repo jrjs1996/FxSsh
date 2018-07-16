@@ -1,0 +1,44 @@
+﻿
+This file contains information on how to replicate a test scenario for this Ssh Server.
+
+Setup:
+
+This setup was conducted using a windows desktop computer to run the server on connected
+to a laptop running linux via ethernet cable. The version of SSH on the linux computer
+may not support reverse connections. So you should run the command:"sudo apt-get install ssh".
+Before testing to make sure it is installed. You should also make sure any ports on both
+machines that will be used in this test are open. Also both machines should be on the same
+subnet. In this test I use a simple python HTTP server on the linux machine that will be
+communicated with via the reverse connection. Create a file called index.html and write
+"Message from client" in it. Save the file then run the command "python3 -m http.server".
+The http server should be up and running. For this example the IP address on my desktop
+on the wired connection is 169.254.73.253 and 169.253.73.20 on my laptop.
+
+Testing:
+
+Start the SshServerLoader on the windows machine.
+
+On the linux machine run the command ssh -R 8000:localhost:8000 root@169.254.73.253
+(Replace the ip after root@ with your the IP on your windows machine)
+
+You should see something similar to this on your SshServerLoader console:
+
+Accepted a client.
+Session E0186DF95A42425A78AEF277FB45F0B31BAB42E5 requesting UserauthService.
+Session E0186DF95A42425A78AEF277FB45F0B31BAB42E5 requesting ConnectionService.
+Channel 0 runs command: "shell".
+
+Enter the following command into the SshserverLoader console:
+Connect root
+
+On the SshServerloader console you should see something similar to:
+HTTP/1.0 200 OK
+Server: SimpleHTTP/0.6 Python/3.5.2
+Date: Mon, 16 Jul 2018 12:44:57 GMT
+Content-type: text/html
+Content-Length: 20
+Last-Modified: Mon, 16 Jul 2018 12:44:36 GMT
+
+                                                                                                                        
+Message from client
+

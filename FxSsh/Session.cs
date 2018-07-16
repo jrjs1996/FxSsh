@@ -64,6 +64,8 @@ namespace FxSsh {
             }
         }
 
+        internal bool ReverseConnectionOpen = false;
+
 #if DEBUG
         private readonly TimeSpan timeout = TimeSpan.FromDays(1);
 #else
@@ -612,6 +614,7 @@ namespace FxSsh {
             this.SendMessage(new ForwardedTcpipMessage(channel.ServerChannelId, channel.ClientInitialWindowSize,
                                                                channel.ClientMaxPacketSize, connectionService.ForwardAddress,
                                                                connectionService.ForwardPort, clientAddress, clientPort));
+            this.ReverseConnectionOpen = true;
         }
 
         private string ChooseAlgorithm(string[] serverAlgorithms, string[] clientAlgorithms) {

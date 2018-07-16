@@ -115,7 +115,7 @@ namespace FxSsh {
             }
         }
 
-        public void AddHostKey([NotNull]string type, [NotNull]string xml) {
+        private void AddHostKey([NotNull]string type, [NotNull]string xml) {
 
             if (!this.hostKey.ContainsKey(type))
                 this.hostKey.Add(type, xml);
