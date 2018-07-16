@@ -12,8 +12,10 @@ namespace FxSsh
         internal readonly SshServerStream stream;
 
         public int PortNumber { get; private set; }
-        // Shouldn't be a reference to channel. B
+
         public DateTime WhenConnected { get; private set; }
+
+        public DateTime LastSeen { get; private set; }
 
         public SshClientConnection(int port, SshClient client) {
             this.WhenConnected = DateTime.Now;
@@ -21,9 +23,14 @@ namespace FxSsh
             Socket s = new Socket(AddressFamily.InterNetwork,
                                   SocketType.Stream,
                                   ProtocolType.Tcp);
-            
+         
             s.Connect(client.Session.remoteAddress, port);
+            s.BeginReceive(new byte[0], 0, 0, SocketFlags.None, this.OnSocketRecieve, new Object());
             this.stream = new SshServerStream(s, client);
+        }
+
+        private void OnSocketRecieve(IAsyncResult result) {
+            this.LastSeen = DateTime.Now;
         }
     }
 }
