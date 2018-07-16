@@ -1,0 +1,41 @@
+﻿
+SshClient
+
+Represents a client that has connected to the server.
+
+Session - The session between the client and the sever.
+
+connections - The reverse connections from the server to the client.
+
+Name - The user name the client used to connect to the server.
+
+
+
+################################################################################
+
+SshClient(Session session)
+
+This constructor is called when a client has connected to the server.
+
+################################################################################
+
+Connect(int port)
+
+Opens a reverse connection with the client and returns a Stream that can be used
+to communicate with the client
+
+Process:
+
+Send a message to the client telling it that we want to open a reverse connection.
+
+Create a new SshClientConnection to the client using the given port on the client.
+
+Add the Connection to the Clients list of connections.
+
+Return a stream that can be used to communicate with the client
+
+################################################################################
+
+DicsonnectSession()
+
+Disconnects the client from the server

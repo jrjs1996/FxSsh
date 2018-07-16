@@ -1,13 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Collections;
 using System.Collections.Immutable;
 using System.IO;
-using System.Linq;
-using System.Net;
-using FxSsh.Messages.Connection;
-using FxSsh.Services;
+
 
 namespace FxSsh
 {
@@ -15,6 +10,10 @@ namespace FxSsh
         internal readonly Session Session;
 
         internal List<SshClientConnection> connections;
+
+        public string Name => this.Session.Username;
+
+        public ImmutableArray<SshClientConnection> Connections => this.connections.ToImmutableArray();
 
         internal SshClient(Session session) {
             this.connections = new List<SshClientConnection>();
@@ -32,8 +31,6 @@ namespace FxSsh
             this.Session.Disconnect();
         }
 
-        public string Name => this.Session.Username;
-
-        public ImmutableArray<SshClientConnection> Connections => this.connections.ToImmutableArray();
+        
     }
 }
