@@ -32,8 +32,8 @@ namespace FxSsh {
 
         private TcpListener listenser;
 
-        public SshServer(IPAddress address, int port) {
-            this.localEndPoint = new IPEndPoint(address, port);
+        public SshServer(IPEndPoint localEndPoint) {
+            this.localEndPoint = localEndPoint;
             this.AuthenticationMethods = new List<AuthenticationMethod>();
 
             // Temporary fix. Figure out why connections aren't working without this so
