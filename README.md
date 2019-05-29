@@ -5,10 +5,6 @@ This is an extension of FxSsh (https://github.com/Aimeast/FxSsh). It adds functi
 
 ### Testing
 
-The MIT license
-
-Testing:
-
 Start the SshServerLoader on the windows machine.
 
 On the linux machine run an ssh -R command e.g. ssh -R 8000:localhost:8000 root@169.254.73.253
@@ -24,3 +20,6 @@ Channel 0 runs command: "shell".
 You should now have a reverse connection to the client.
 
 ---
+
+License
+The MIT license
