@@ -11,7 +11,7 @@ Testing:
 
 Start the SshServerLoader on the windows machine.
 
-On the linux machine run the command ssh -R 8000:localhost:8000 root@169.254.73.253
+On the linux machine run an ssh -R command e.g. ssh -R 8000:localhost:8000 root@169.254.73.253
 (Replace the ip after root@ with your the IP on your windows machine)
 
 You should see something similar to this on your SshServerLoader console:
