@@ -11,7 +11,7 @@ using FxSsh.Exceptions;
 namespace SshServerLoader {
     class Program {
         static void Main() {
-            var server = new SshServer(new IPEndPoint(IPAddress.Parse("169.254.73.253"), 22));
+            var server = new SshServer(new IPEndPoint(IPAddress.Any, 8888));
             var authenticationMethods = new List<FxSsh.AuthenticationMethod>();
             server.SetClientKeyRepository(new ClientKeyRepository());
             authenticationMethods.Add(AuthenticationMethod.PublicKey);
