@@ -1,5 +1,5 @@
-## FxSsh
-FxSsh is a lightweight [SSH](http://en.wikipedia.org/wiki/Secure_Shell) server side application as SSH reinforcement of [GitCandy](https://github.com/Aimeast/GitCandy). 
+## FxSsh Reverse Server
+This is an extension of FxSsh (https://github.com/Aimeast/FxSsh). It adds functionality for accepting reverse port forwarding (https://blog.devolutions.net/2017/3/what-is-reverse-ssh-port-forwarding) connections.
 
 ---
 ### Nuget
