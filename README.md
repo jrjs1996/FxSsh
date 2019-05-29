@@ -5,9 +5,6 @@ This is an extension of FxSsh (https://github.com/Aimeast/FxSsh). It adds functi
 
 ### Testing
 
-
----
-### License
 The MIT license
 
 Testing:
@@ -25,3 +22,5 @@ Session E0186DF95A42425A78AEF277FB45F0B31BAB42E5 requesting ConnectionService.
 Channel 0 runs command: "shell".
 
 You should now have a reverse connection to the client.
+
+---
